@@ -100,20 +100,21 @@ canvas{display:block;width:var(--pw,405px);height:auto}
     <div id="paneOne">
       <div class="field">
         <label for="fName">Имя получателя</label>
-        <input type="text" id="fName" placeholder="Сергей">
+        <input type="text" id="fName" placeholder="пусто">
         <div class="hint">Подставляется в текст вместо {имя}. Пусто — фраза начнётся с «Этот сертификат…»</div>
+        <div class="hint">Поля ниже тоже можно оставлять пустыми: строка просто не печатается.</div>
         <div class="hint warn" id="nameWarn"></div>
       </div>
       <div class="row">
         <div class="field">
           <label for="fNum">Номер</label>
-          <input type="text" id="fNum" placeholder="N005">
+          <input type="text" id="fNum" placeholder="пусто">
           <div class="mini"><button id="btnNext">Следующий номер</button></div>
           <label class="check"><input type="checkbox" id="fAuto"> увеличивать после скачивания PDF</label>
         </div>
         <div class="field">
           <label for="fVal">Номинал</label>
-          <input type="text" id="fVal" placeholder="5000">
+          <input type="text" id="fVal" placeholder="пусто">
           <div class="mini">
             <button data-val="3000">3 000</button>
             <button data-val="5000">5 000</button>
@@ -123,7 +124,7 @@ canvas{display:block;width:var(--pw,405px);height:auto}
       </div>
       <div class="field">
         <label for="fDate">Срок действия</label>
-        <input type="text" id="fDate" placeholder="01.12.2026">
+        <input type="text" id="fDate" placeholder="пусто">
         <div class="mini">
           <button data-add="3">+3 мес</button>
           <button data-add="6">+6 мес</button>
@@ -137,7 +138,7 @@ canvas{display:block;width:var(--pw,405px);height:auto}
     <div id="paneBatch" class="hidden">
       <div class="field">
         <label for="fBatch">Список сертификатов</label>
-        <textarea id="fBatch" rows="9" placeholder="Сергей; N005; 5000&#10;Анна; N006; 10000&#10;; N007; 3000"></textarea>
+        <textarea id="fBatch" rows="9" placeholder="имя; номер; номинал&#10;имя; номер; номинал"></textarea>
         <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
         <div class="hint" id="batchInfo"></div>
       </div>
@@ -147,16 +148,16 @@ canvas{display:block;width:var(--pw,405px);height:auto}
       <summary>Текст и подвал (сохраняются в браузере)</summary>
       <div class="field">
         <label for="fBody">Текст сертификата</label>
-        <textarea id="fBody" rows="4"></textarea>
+        <textarea id="fBody" rows="4" placeholder="пусто"></textarea>
         <div class="hint">Переносы строк уважаются. Слишком длинные строки переносятся сами, шрифт ужимается, если строк много.</div>
       </div>
       <div class="row">
-        <div class="field"><label for="fH1">Режим работы, строка 1</label><input type="text" id="fH1"></div>
-        <div class="field"><label for="fH2">Строка 2</label><input type="text" id="fH2"></div>
+        <div class="field"><label for="fH1">Режим работы, строка 1</label><input type="text" id="fH1" placeholder="пусто"></div>
+        <div class="field"><label for="fH2">Строка 2</label><input type="text" id="fH2" placeholder="пусто"></div>
       </div>
-      <div class="field"><label for="fC1">Призыв, строка 1</label><input type="text" id="fC1"></div>
-      <div class="field"><label for="fC2">Призыв, строка 2</label><input type="text" id="fC2"></div>
-      <div class="field"><label for="fPhone">Телефон</label><input type="text" id="fPhone"></div>
+      <div class="field"><label for="fC1">Призыв, строка 1</label><input type="text" id="fC1" placeholder="пусто"></div>
+      <div class="field"><label for="fC2">Призыв, строка 2</label><input type="text" id="fC2" placeholder="пусто"></div>
+      <div class="field"><label for="fPhone">Телефон</label><input type="text" id="fPhone" placeholder="пусто"></div>
       <div class="field">
         <label for="fFont">Шрифт</label>
         <select id="fFont">

@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmileClinic — генератор сертификатов</title>
+<meta name="description" content="Инструмент выпуска подарочных сертификатов SmileClinic: PDF и PNG на фирменном макете.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1c1a'/%3E%3Cpath d='M9 14a7 7 0 0 0 14 0' fill='none' stroke='%23a8926a' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:'CertSans';src:url(data:font/ttf;base64,{{FONT_REG_B64}}) format('truetype');font-weight:400;font-display:block}
+@font-face{font-family:'CertSans';src:url(data:font/ttf;base64,{{FONT_BOLD_B64}}) format('truetype');font-weight:700;font-display:block}
+:root{
+  --bg:#121211; --panel:#1c1c1a; --panel2:#232320; --line:#33322d;
+  --gold:#a8926a;
+  --txt:#eceae4; --muted:#8f8c83;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg); color:var(--txt);
+  font:15px/1.45 'CertSans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.app{display:grid;grid-template-columns:440px 1fr;height:100vh;overflow:hidden}
+/* ---------- панель ---------- */
+.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:26px 26px 120px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.brand b{font-weight:700;font-size:20px;letter-spacing:.02em}
+.brand span{font-weight:400;font-size:20px;color:var(--muted)}
+.sub{color:var(--muted);font-size:13px;margin:0 0 22px}
+.tabs{display:flex;gap:6px;background:var(--panel2);padding:4px;border-radius:10px;margin-bottom:22px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;padding:8px 6px;border-radius:7px;cursor:pointer}
+.tabs button.on{background:var(--gold);color:#191813;font-weight:700}
+label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.field{margin-bottom:16px}
+input[type=text],textarea,select{
+  width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+  color:var(--txt);font:inherit;padding:10px 12px;outline:none;resize:vertical
+}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{line-height:1.5}
+.row{display:flex;gap:12px}
+.row>*{flex:1;min-width:0}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.hint.warn{color:#d8b26a}
+.mini{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.mini button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:12px;
+  padding:5px 10px;border-radius:20px;cursor:pointer}
+.mini button:hover{border-color:var(--gold);color:var(--txt)}
+.mini button.on{border-color:var(--gold);color:#191813;background:var(--gold)}
+.check{display:flex;align-items:center;gap:7px;text-transform:none;letter-spacing:0;font-size:12px;margin-top:9px}
+.check input{accent-color:var(--gold)}
+details{border-top:1px solid var(--line);padding-top:14px;margin-top:22px}
+details summary{cursor:pointer;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+details summary::marker{color:var(--gold)}
+.actions{position:fixed;bottom:0;left:0;width:440px;background:linear-gradient(180deg,transparent,var(--panel) 26%);
+  padding:26px;display:flex;gap:10px}
+.btn{flex:1;border:0;border-radius:10px;font:inherit;font-weight:700;padding:13px 10px;cursor:pointer}
+.btn-gold{background:var(--gold);color:#191813}
+.btn-gold:hover{background:#bda476}
+.btn-ghost{flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:400;padding:13px 16px}
+.btn-ghost:hover{border-color:var(--gold)}
+.btn[disabled]{opacity:.5;cursor:progress}
+/* ---------- сцена ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow:auto;padding:32px 32px 60px;background:
+  radial-gradient(1200px 600px at 50% -10%, #1d1d1a 0%, var(--bg) 60%)}
+.paper{box-shadow:0 24px 70px rgba(0,0,0,.55);border-radius:2px;overflow:hidden;line-height:0}
+canvas{display:block;width:var(--pw,405px);height:auto}
+.stage-bar{display:flex;gap:14px;align-items:center;color:var(--muted);font-size:12px;margin-bottom:16px}
+.stage-bar b{color:var(--txt);font-weight:400}
+.zoom{display:flex;gap:4px}
+.zoom button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  width:26px;height:26px;cursor:pointer;font:inherit;line-height:1}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--panel2);
+  border:1px solid var(--gold);color:var(--txt);padding:11px 18px;border-radius:10px;font-size:14px;
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
+.toast.on{opacity:1}
+.hidden{display:none}
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr;height:auto;overflow:auto}
+  .actions{position:sticky;width:100%}
+  .panel{border-right:0;border-bottom:1px solid var(--line);padding-bottom:26px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <div class="brand"><b>smile</b><span>clinic</span></div>
+    <p class="sub">Генератор подарочных сертификатов</p>
+
+    <div class="tabs">
+      <button id="tabOne" class="on">Один сертификат</button>
+      <button id="tabBatch">Пакетом</button>
+    </div>
+
+    <!-- ОДИН -->
+    <div id="paneOne">
+      <div class="field">
+        <label for="fName">Имя получателя</label>
+        <input type="text" id="fName" placeholder="Сергей">
+        <div class="hint">Подставляется в текст вместо {имя}. Пусто — фраза начнётся с «Этот сертификат…»</div>
+        <div class="hint warn" id="nameWarn"></div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="fNum">Номер</label>
+          <input type="text" id="fNum" placeholder="N005">
+          <div class="mini"><button id="btnNext">Следующий номер</button></div>
+          <label class="check"><input type="checkbox" id="fAuto"> увеличивать после скачивания PDF</label>
+        </div>
+        <div class="field">
+          <label for="fVal">Номинал</label>
+          <input type="text" id="fVal" placeholder="5000">
+          <div class="mini">
+            <button data-val="3000">3 000</button>
+            <button data-val="5000">5 000</button>
+            <button data-val="10000">10 000</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fDate">Срок действия</label>
+        <input type="text" id="fDate" placeholder="01.12.2026">
+        <div class="mini">
+          <button data-add="3">+3 мес</button>
+          <button data-add="6">+6 мес</button>
+          <button data-add="12">+1 год</button>
+          <button data-add="0">Убрать строку</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ПАКЕТ -->
+    <div id="paneBatch" class="hidden">
+      <div class="field">
+        <label for="fBatch">Список сертификатов</label>
+        <textarea id="fBatch" rows="9" placeholder="Сергей; N005; 5000&#10;Анна; N006; 10000&#10;; N007; 3000"></textarea>
+        <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
+        <div class="hint" id="batchInfo"></div>
+      </div>
+    </div>
+
+    <details id="settings">
+      <summary>Текст и подвал (сохраняются в браузере)</summary>
+      <div class="field">
+        <label for="fBody">Текст сертификата</label>
+        <textarea id="fBody" rows="4"></textarea>
+        <div class="hint">Переносы строк уважаются. Слишком длинные строки переносятся сами, шрифт ужимается, если строк много.</div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="fH1">Режим работы, строка 1</label><input type="text" id="fH1"></div>
+        <div class="field"><label for="fH2">Строка 2</label><input type="text" id="fH2"></div>
+      </div>
+      <div class="field"><label for="fC1">Призыв, строка 1</label><input type="text" id="fC1"></div>
+      <div class="field"><label for="fC2">Призыв, строка 2</label><input type="text" id="fC2"></div>
+      <div class="field"><label for="fPhone">Телефон</label><input type="text" id="fPhone"></div>
+      <div class="field">
+        <label for="fFont">Шрифт</label>
+        <select id="fFont">
+          <option value="builtin">Как в макете (Montserrat)</option>
+          <option value="custom">Свой шрифт (.ttf / .otf)</option>
+        </select>
+        <div id="fontUpload" class="hidden">
+          <div class="row" style="margin-top:10px">
+            <div><label for="fFontReg">Обычный</label><input type="file" id="fFontReg" accept=".ttf,.otf"></div>
+            <div><label for="fFontBold">Жирный</label><input type="file" id="fFontBold" accept=".ttf,.otf"></div>
+          </div>
+          <div class="hint" id="fontState"></div>
+          <div class="hint">Файлы никуда не отправляются и в репозиторий не попадают, но и не сохраняются: после перезагрузки страницы их нужно выбрать заново. Так можно печатать фирменным Gotham Pro, не выкладывая платный шрифт в открытый доступ.</div>
+        </div>
+      </div>
+      <div class="mini"><button id="btnReset">Сбросить настройки</button></div>
+    </details>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-bar">
+      <span>Предпросмотр <b id="pvInfo">1080 × 1600</b></span>
+      <span class="zoom"><button id="zOut">−</button><button id="zIn">+</button></span>
+    </div>
+    <div class="paper"><canvas id="cv" width="2160" height="3200"></canvas></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>{{PDFLIB}}</script>
+<script>{{FONTKIT}}</script>
+<script>
+"use strict";
+/* ================= данные шаблона ================= */
+const TPL_PDF_B64 = "{{TPL_PDF_B64}}";
+const BG_PNG_B64  = "{{BG_B64}}";
+const FONT_REG_B64  = "{{FONT_REG_B64}}";
+const FONT_BOLD_B64 = "{{FONT_BOLD_B64}}";
+
+/* ================= раскладка (в пунктах страницы 1080×1600) ================= */
+const L = {
+  W:1080, H:1600, CX:540,
+  bg:{r:28/255,g:28/255,b:26/255},           // цвет фона макета
+  cover:{y0:520, y1:1425},                    // зона, которую перерисовываем
+  body:{size:40, lh:58, track:-0.2, centerY:703, maxW:900, minSize:26, top:534, bottom:876},
+  accent:{size:41, track:0.5, y1:927.75, y2:985.75, ySolo:956.75},
+  srok:{size:25, track:0.12, y:1119.5},
+  divider:{x0:182, x1:896, y:1150, h:1},
+  foot:{track:0.1},
+  hours:{size:25, y1:1206.75, y2:1242.25},
+  cta:{size:25, y1:1306.75, y2:1341.75},
+  phone:{size:25, y:1376.75}
+};
+const DEFAULTS = {
+  body:"{имя}, этот сертификат дает возможность\nвоспользоваться любыми услугами\nэстетической стоматологии\nSmileClinic",
+  h1:"Мы работаем ежедневно", h2:"с 9:00 до 21:00",
+  c1:"Чтобы воспользоваться сертификатом,", c2:"запишитесь на прием по телефону",
+  phone:"+7 (812) 241 12 88", date:"", font:"builtin"
+};
+const STORE = "smileclinic-cert-v1";
+
+/* ================= утилиты ================= */
+const $ = id => document.getElementById(id);
+const b64ToBytes = b64 => { const s = atob(b64), a = new Uint8Array(s.length);
+  for (let i=0;i<s.length;i++) a[i]=s.charCodeAt(i); return a; };
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),2600); }
+function money(v){
+  const raw = String(v||"").trim();
+  if(!raw) return "";
+  if(/^[\d\s  ]+$/.test(raw)){
+    const n = raw.replace(/[\s  ]/g,"");
+    return n.replace(/\B(?=(\d{3})+(?!\d))/g," ") + "₽";
+  }
+  return raw;
+}
+function nextNumber(s){
+  const m = String(s||"").match(/^(.*?)(\d+)(\D*)$/);
+  if(!m) return s;
+  const inc = String(Number(m[2])+1).padStart(m[2].length,"0");
+  return m[1]+inc+m[3];
+}
+function plusMonths(months){
+  const d = new Date(); d.setMonth(d.getMonth()+months);
+  const p = n => String(n).padStart(2,"0");
+  return p(d.getDate())+"."+p(d.getMonth()+1)+"."+d.getFullYear();
+}
+function fileSafe(s){ return String(s).replace(/[\\/:*?"<>|]/g,"-").replace(/\s+/g," ").trim(); }
+function download(blob, name){
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+
+/* ================= шрифты ================= */
+const fonts = { custom:false };
+async function useCustomFont(kind, arrayBuffer){
+  const family = kind==="reg" ? "CertCustomReg" : "CertCustomBold";
+  const face = new FontFace(family, arrayBuffer.slice(0));
+  await face.load(); document.fonts.add(face);
+  const bytes = new Uint8Array(arrayBuffer);
+  let fk = null; try{ fk = fontkit.create(bytes); }catch(e){}
+  fonts[kind] = { bytes, family, weight:400, fk, custom:true };
+  fonts.custom = true;
+}
+function builtin(kind){
+  return kind === "bold"
+    ? {bytes:b64ToBytes(FONT_BOLD_B64), family:"CertSans", weight:700, fk:null, custom:false}
+    : {bytes:b64ToBytes(FONT_REG_B64),  family:"CertSans", weight:400, fk:null, custom:false};
+}
+fonts.reg = builtin("reg"); fonts.bold = builtin("bold");
+function fam(kind, alt){ return alt ? "CertSans" : fonts[kind].family; }
+function trackOf(v){ return fonts.custom ? 0 : v; }   // трекинг калибровали под макетный шрифт
+
+/** режет строку на куски: alt=true — символы, которых нет в подключённом шрифте (берём из встроенного) */
+function segs(s, kind){
+  const f = fonts[kind];
+  if(!f.custom || !f.fk) return [{s, alt:false}];
+  const out = []; let cur = "", curAlt = null;
+  for(const ch of s){
+    const alt = ch !== " " && !f.fk.hasGlyphForCodePoint(ch.codePointAt(0));
+    if(curAlt === null || alt === curAlt){ cur += ch; curAlt = alt; }
+    else { out.push({s:cur, alt:curAlt}); cur = ch; curAlt = alt; }
+  }
+  if(cur) out.push({s:cur, alt:curAlt});
+  return out;
+}
+
+/* ================= состояние ================= */
+let S = Object.assign({}, DEFAULTS, {name:"", num:"", val:"", batch:"", mode:"one"});
+function loadStore(){
+  try{
+    const raw = localStorage.getItem(STORE);
+    if(raw) Object.assign(S, JSON.parse(raw));
+  }catch(e){}
+}
+function saveStore(){
+  const keep = {body:S.body,h1:S.h1,h2:S.h2,c1:S.c1,c2:S.c2,phone:S.phone,date:S.date,num:S.num,
+                font:S.font,auto:S.auto,settingsOpen:S.settingsOpen};
+  try{ localStorage.setItem(STORE, JSON.stringify(keep)); }catch(e){}
+}
+
+/* ================= построение макета ================= */
+const measureCv = document.createElement("canvas").getContext("2d");
+function mText(t, size, kind, track){
+  measureCv.letterSpacing = (track||0)+"px";
+  let w = 0;
+  segs(t, kind).forEach(sg=>{
+    measureCv.font = (kind==="bold"?"700 ":"400 ")+size+"px "+fam(kind, sg.alt);
+    w += measureCv.measureText(sg.s).width;
+  });
+  measureCv.letterSpacing = "0px";
+  return w - (track||0);           // без хвостового трекинга
+}
+function wrap(text, size, track, maxW){
+  const out = [];
+  // слово длиннее строки рвём по буквам, иначе вылезет за поля
+  const chop = w => {
+    const parts = [];
+    let cur = "";
+    for(const ch of w){
+      if(cur && mText(cur+ch,size,"reg",track) > maxW){ parts.push(cur); cur = ch; }
+      else cur += ch;
+    }
+    if(cur) parts.push(cur);
+    return parts;
+  };
+  String(text).split("\n").forEach(par=>{
+    const words = par.split(/\s+/).filter(Boolean).flatMap(w =>
+      mText(w,size,"reg",track) > maxW ? chop(w) : [w]);
+    if(!words.length){ out.push(""); return; }
+    let line = words[0];
+    for(let i=1;i<words.length;i++){
+      const t = line+" "+words[i];
+      if(mText(t,size,"reg",track) <= maxW) line = t;
+      else { out.push(line); line = words[i]; }
+    }
+    out.push(line);
+  });
+  return out;
+}
+function bodyText(tpl, name){
+  let t = String(tpl||"");
+  const n = String(name||"").trim();
+  if(n) t = t.replace(/\{имя\}/g, n);
+  else {
+    t = t.replace(/\{имя\},\s*/g, "").replace(/\{имя\}\s*/g, "");
+    t = t.replace(/^\s*([а-яё])/, (m,c)=>c.toUpperCase());
+  }
+  return t;
+}
+/** возвращает список операций отрисовки */
+function buildOps(data){
+  const ops = [];
+  ops.push({t:"rect", x:0, y:L.cover.y0, w:L.W, h:L.cover.y1-L.cover.y0, fill:L.bg});
+
+  // основной текст: подбор кегля
+  let size = L.body.size, lh = L.body.lh, lines = [];
+  const avail = L.body.bottom - L.body.top;
+  for(;;){
+    lines = wrap(bodyText(data.body, data.name), size, trackOf(L.body.track), L.body.maxW*size/L.body.size);
+    const h = (lines.length-1)*lh + size*0.9;
+    if(h <= avail || size <= L.body.minSize) break;
+    size -= 1; lh = Math.round(size*1.45);
+  }
+  const first = L.body.centerY - (lines.length-1)*lh/2;
+  lines.forEach((ln,i)=>{ if(ln) ops.push({t:"text", s:ln, size, kind:"reg",
+    track:trackOf(L.body.track), y:first+i*lh}); });
+
+  // номер / номинал
+  const numLine = data.num ? "Номер сертификата: "+data.num : "";
+  const valLine = data.val ? "Номинал: "+money(data.val) : "";
+  const pair = [numLine, valLine].filter(Boolean);
+  if(pair.length===2){
+    ops.push({t:"text", s:numLine, size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.y1});
+    ops.push({t:"text", s:valLine, size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.y2});
+  } else if(pair.length===1){
+    ops.push({t:"text", s:pair[0], size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.ySolo});
+  }
+
+  // срок действия
+  if(data.date) ops.push({t:"text", s:"Срок действия сертификата до "+data.date,
+    size:L.srok.size, kind:"reg", track:trackOf(L.srok.track), y:L.srok.y});
+
+  // разделитель
+  ops.push({t:"rect", x:L.divider.x0, y:L.divider.y, w:L.divider.x1-L.divider.x0, h:L.divider.h,
+    fill:{r:1,g:1,b:1}});
+
+  // подвал
+  const ft = trackOf(L.foot.track);
+  if(data.h1) ops.push({t:"text", s:data.h1, size:L.hours.size, kind:"reg", track:ft, y:L.hours.y1});
+  if(data.h2) ops.push({t:"text", s:data.h2, size:L.hours.size, kind:"reg", track:ft, y:L.hours.y2});
+  if(data.c1) ops.push({t:"text", s:data.c1, size:L.cta.size, kind:"reg", track:ft, y:L.cta.y1});
+  if(data.c2) ops.push({t:"text", s:data.c2, size:L.cta.size, kind:"reg", track:ft, y:L.cta.y2});
+  if(data.phone) ops.push({t:"text", s:data.phone, size:L.phone.size, kind:"bold", track:ft, y:L.phone.y});
+  return ops;
+}
+
+/* ================= предпросмотр на canvas ================= */
+const cv = $("cv"), ctx = cv.getContext("2d");
+const bgImg = new Image(); let bgReady = false;
+bgImg.onload = ()=>{ bgReady = true; draw(); };
+bgImg.src = "data:image/png;base64,"+BG_PNG_B64;
+
+/** что показываем в предпросмотре: в пакетном режиме — первый сертификат списка */
+function previewData(){
+  if(S.mode === "batch"){
+    const list = parseBatch();
+    if(list.length) return list[0];
+  }
+  return S;
+}
+function draw(){
+  if(!bgReady) return;
+  const k = cv.width / L.W;                    // 2160/1080 = 2
+  ctx.setTransform(k,0,0,k,0,0);
+  ctx.clearRect(0,0,L.W,L.H);
+  ctx.drawImage(bgImg,0,0,L.W,L.H);
+  const data = previewData();
+  const info = $("pvInfo");
+  if(info) info.textContent = S.mode === "batch" && parseBatch().length
+    ? "первый из списка" : "1080 × 1600";
+  const ops = buildOps(data);
+  ops.forEach(op=>{
+    if(op.t==="rect"){
+      ctx.fillStyle = `rgb(${Math.round(op.fill.r*255)},${Math.round(op.fill.g*255)},${Math.round(op.fill.b*255)})`;
+      ctx.fillRect(op.x,op.y,op.w,op.h);
+    } else {
+      ctx.letterSpacing = (op.track||0)+"px";
+      ctx.fillStyle = "#ffffff";
+      ctx.textBaseline = "alphabetic";
+      const parts = segs(op.s, op.kind);
+      const setFont = alt => ctx.font = (op.kind==="bold"?"700 ":"400 ")+op.size+"px "+fam(op.kind, alt);
+      let total = 0;
+      parts.forEach(sg=>{ setFont(sg.alt); total += ctx.measureText(sg.s).width; });
+      let x = L.CX - (total - (op.track||0))/2;
+      parts.forEach(sg=>{ setFont(sg.alt); ctx.fillText(sg.s, x, op.y);
+        x += ctx.measureText(sg.s).width; });
+      ctx.letterSpacing = "0px";
+    }
+  });
+}
+
+/* ================= PDF ================= */
+const { PDFDocument, rgb, setCharacterSpacing } = PDFLib;
+async function makePdf(list){
+  const tpl = await PDFDocument.load(b64ToBytes(TPL_PDF_B64));
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
+  const opsPerPage = list.map(buildOps);
+  const needFallback = fonts.custom && opsPerPage.some(ops => ops.some(op =>
+    op.t==="text" && segs(op.s, op.kind).some(sg=>sg.alt)));
+
+  const F = {
+    reg:  await doc.embedFont(fonts.reg.bytes,  {subset:true}),
+    bold: await doc.embedFont(fonts.bold.bytes, {subset:true}),
+  };
+  if(needFallback){
+    F.altReg  = await doc.embedFont(builtin("reg").bytes,  {subset:true});
+    F.altBold = await doc.embedFont(builtin("bold").bytes, {subset:true});
+  }
+  const pick = (kind, alt) => alt ? (kind==="bold"?F.altBold:F.altReg) : (kind==="bold"?F.bold:F.reg);
+
+  for(const ops of opsPerPage){
+    const [page] = await doc.copyPages(tpl,[0]);
+    doc.addPage(page);
+    ops.forEach(op=>{
+      if(op.t==="rect"){
+        page.drawRectangle({x:op.x, y:L.H-op.y-op.h, width:op.w, height:op.h,
+          color:rgb(op.fill.r,op.fill.g,op.fill.b)});
+        return;
+      }
+      const tr = op.track||0, parts = segs(op.s, op.kind);
+      const total = parts.reduce((s,sg)=> s + pick(op.kind,sg.alt).widthOfTextAtSize(sg.s, op.size), 0)
+                    + tr*(op.s.length-1);
+      let x = L.CX - total/2;
+      if(tr) page.pushOperators(setCharacterSpacing(tr));
+      parts.forEach(sg=>{
+        const f = pick(op.kind, sg.alt);
+        page.drawText(sg.s, {x, y:L.H-op.y, size:op.size, font:f, color:rgb(1,1,1)});
+        x += f.widthOfTextAtSize(sg.s, op.size) + tr*sg.s.length;
+      });
+      if(tr) page.pushOperators(setCharacterSpacing(0));
+    });
+  }
+  return new Blob([await doc.save()], {type:"application/pdf"});
+}
+
+/* ================= действия ================= */
+async function downloadPdf(){
+  const btn = $("btnPdf"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Готовлю PDF…";
+  try{
+    const batch = S.mode === "batch" ? parseBatch() : null;
+    if(batch && !batch.length){ toast("Список пуст"); return; }
+    const list = batch ? batch : [Object.assign({}, S)];
+    const blob = await makePdf(list);
+    const name = batch
+      ? `Сертификаты SmileClinic (${list.length}).pdf`
+      : fileSafe(`Сертификат ${S.num||""} ${S.name||""}`.trim())+".pdf";
+    download(blob, name);
+    if(!batch && S.num && S.auto){ S.num = nextNumber(S.num); $("fNum").value = S.num; saveStore(); draw(); }
+    toast(batch ? `PDF на ${list.length} стр. скачан` : "PDF скачан");
+  }catch(e){ console.error(e); toast("Ошибка: "+e.message); }
+  finally{ btn.disabled = false; btn.textContent = label; }
+}
+function downloadPng(){
+  draw();
+  cv.toBlob(b => download(b, fileSafe(`Сертификат ${S.num||""} ${S.name||""}`.trim())+".png"), "image/png");
+  toast("PNG 2160×3200 скачан");
+}
+function parseBatch(){
+  return String(S.batch||"").split("\n").map(l=>l.trim()).filter(Boolean)
+    .filter(l=>!/^(имя|name)\s*[;\t]/i.test(l))         // строка-заголовок из таблицы
+    .map(line=>{
+      const p = line.split(/[;\t]/).map(s=>s.trim());
+      return Object.assign({}, S, {name:p[0]||"", num:p[1]||"", val:p[2]||""});
+    });
+}
+function batchInfo(){
+  const el = $("batchInfo"); if(!el) return;
+  const n = parseBatch().length;
+  el.textContent = n ? `Будет ${n} ${n%10===1&&n%100!==11?"страница":(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?"страницы":"страниц")} в одном PDF.` : "";
+}
+
+/* ================= привязка UI ================= */
+function markVal(){
+  const cur = String(S.val||"").replace(/\s/g,"");
+  document.querySelectorAll("[data-val]").forEach(b=>
+    b.classList.toggle("on", b.dataset.val === cur));
+}
+function nameWarn(){
+  const el = $("nameWarn"); if(!el) return;
+  el.textContent = (S.name && !/\{имя\}/.test(S.body||""))
+    ? "В тексте сертификата нет {имя} — имя не попадёт на макет." : "";
+}
+function bind(id, key, after){
+  const el = $(id);
+  el.value = S[key] || "";
+  const h = ()=>{ S[key] = el.value; saveStore(); draw(); if(after) after(); };
+  el.addEventListener("input", h);
+}
+function initUI(){
+  loadStore();
+  bind("fName","name", nameWarn); bind("fNum","num"); bind("fVal","val", markVal); bind("fDate","date");
+  bind("fBody","body", nameWarn); bind("fH1","h1"); bind("fH2","h2"); bind("fC1","c1"); bind("fC2","c2");
+  bind("fPhone","phone"); bind("fBatch","batch", batchInfo);
+
+  $("btnNext").onclick = ()=>{ S.num = nextNumber(S.num||"N000"); $("fNum").value = S.num; saveStore(); draw(); };
+  const auto = $("fAuto"); auto.checked = !!S.auto;
+  auto.onchange = ()=>{ S.auto = auto.checked; saveStore(); };
+  document.querySelectorAll("[data-val]").forEach(b=> b.onclick = ()=>{
+    S.val = b.dataset.val; $("fVal").value = S.val; markVal(); draw(); });
+  markVal();
+  document.querySelectorAll("[data-add]").forEach(b=> b.onclick = ()=>{
+    const m = Number(b.dataset.add);
+    S.date = m ? plusMonths(m) : ""; $("fDate").value = S.date; saveStore(); draw(); });
+
+  $("tabOne").onclick = ()=>{ $("tabOne").classList.add("on"); $("tabBatch").classList.remove("on");
+    $("paneOne").classList.remove("hidden"); $("paneBatch").classList.add("hidden");
+    $("btnPng").classList.remove("hidden");
+    S.mode = "one"; $("btnPdf").textContent = "Скачать PDF"; draw(); };
+  $("tabBatch").onclick = ()=>{ $("tabBatch").classList.add("on"); $("tabOne").classList.remove("on");
+    $("paneBatch").classList.remove("hidden"); $("paneOne").classList.add("hidden");
+    $("btnPng").classList.add("hidden");        // PNG отдаёт только текущий предпросмотр
+    S.mode = "batch"; $("btnPdf").textContent = "Скачать пакет PDF";
+    batchInfo(); draw(); $("fBatch").focus(); };
+
+  const fontSel = $("fFont");
+  fontSel.value = S.font || "builtin";
+  $("fontUpload").classList.toggle("hidden", fontSel.value!=="custom");
+  fontSel.onchange = ()=>{ S.font = fontSel.value; saveStore();
+    $("fontUpload").classList.toggle("hidden", fontSel.value!=="custom");
+    if(fontSel.value==="builtin"){ fonts.reg=builtin("reg"); fonts.bold=builtin("bold");
+      fonts.custom=false; draw(); }
+  };
+  const fontState = ()=>{
+    const el = $("fontState");
+    const n = k => fonts[k].custom ? (fonts[k].fileName||"свой") : "встроенный Montserrat";
+    el.textContent = fonts.custom ? `Сейчас: обычный — ${n("reg")}, жирный — ${n("bold")}.` : "";
+  };
+  const hookFont = (id,kind)=> $(id).onchange = async ev=>{
+    const f = ev.target.files[0]; if(!f) return;
+    try{
+      await useCustomFont(kind, await f.arrayBuffer());
+      fonts[kind].fileName = f.name;
+      toast(f.name+" подключён"); fontState(); draw();
+    }catch(e){ toast("Шрифт не читается: "+f.name); }
+  };
+  hookFont("fFontReg","reg"); hookFont("fFontBold","bold");
+  if(S.font === "custom") $("fontState").textContent =
+    "Шрифт после перезагрузки не сохраняется — выбери файлы заново, иначе печатается встроенный Montserrat.";
+
+  const det = $("settings");
+  det.open = !!S.settingsOpen;
+  det.addEventListener("toggle", ()=>{ S.settingsOpen = det.open; saveStore(); });
+
+  $("btnReset").onclick = ()=>{
+    if(!confirm("Сбросить текст, подвал и номер к исходным значениям?")) return;
+    localStorage.removeItem(STORE); location.reload();
+  };
+  $("btnPdf").onclick = downloadPdf;
+  $("btnPng").onclick = downloadPng;
+  document.addEventListener("keydown", e=>{
+    if((e.metaKey||e.ctrlKey) && e.key==="Enter"){ e.preventDefault(); downloadPdf(); } });
+
+  // зум предпросмотра: по умолчанию — во всю высоту окна
+  let pw = Math.round(Math.min(620, Math.max(300, (window.innerHeight-150)*1080/1600)));
+  const setZoom = v => { pw = Math.max(240, Math.min(900, v));
+    document.documentElement.style.setProperty("--pw", pw+"px"); };
+  setZoom(pw);
+  $("zIn").onclick = ()=>setZoom(pw+60); $("zOut").onclick = ()=>setZoom(pw-60);
+}
+
+/* ================= старт ================= */
+(async function(){
+  const bar = document.createElement("div");
+  document.body.appendChild(bar);
+  // кнопки действий (вне панели, чтобы были всегда видны)
+  const act = document.createElement("div");
+  act.className = "actions";
+  act.innerHTML = '<button class="btn btn-gold" id="btnPdf">Скачать PDF</button>'+
+                  '<button class="btn btn-ghost" id="btnPng">PNG</button>';
+  document.querySelector(".app").appendChild(act);
+  bar.remove();
+  initUI();
+  try{ await document.fonts.load("400 40px CertSans"); await document.fonts.load("700 41px CertSans"); }catch(e){}
+  draw();
+  $("fName").focus();
+})();
+</script>
+</body>
+</html>

@@ -21,6 +21,6 @@ out = tpl
 for k, v in repl.items():
     out = out.replace(k, v)
 
-dest = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "index.html")
+dest = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "certificate", "index.html")
 with open(dest, "w", encoding="utf-8") as f: f.write(out)
 print("built:", dest, round(len(out.encode())/1024), "KB")

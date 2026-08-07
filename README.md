@@ -2,9 +2,11 @@
 
 Однофайловый веб-инструмент: вводишь имя, номер и номинал — скачиваешь готовый PDF или PNG на фирменном макете клиники.
 
-**Открыть:** https://mihatal.github.io/smileclinic/
+**Открыть:** https://mihatal.github.io/smileclinic/certificate/
 
-Весь инструмент — один `index.html` (1,8 МБ). Внутри уже лежат pdf-lib, fontkit, шрифты и векторный макет, внешних запросов ноль: работает и на GitHub Pages, и с двойного клика по файлу с диска, и без интернета.
+Старые адреса — корень репозитория и `/sertificate/` (написание с ошибкой) — редиректят сюда же.
+
+Весь инструмент — один `certificate/index.html` (1,8 МБ). Внутри уже лежат pdf-lib, fontkit, шрифты и векторный макет, внешних запросов ноль: работает и на GitHub Pages, и с двойного клика по файлу с диска, и без интернета.
 
 ## Что умеет
 
@@ -34,7 +36,7 @@
 cd src
 curl -L -o pdf-lib.min.js https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js
 curl -L -o fontkit.umd.min.js https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js
-python3 build.py ../index.html
+python3 build.py ../certificate/index.html
 ```
 
 Правится `src/tool.tpl.html`, `build.py` вшивает в него библиотеки, шрифты и макет. Проверка — `node src/test.mjs`, `test2.mjs` (длинный текст, свой шрифт), `test3.mjs` (юзабилити) — нужен `npm i playwright`.

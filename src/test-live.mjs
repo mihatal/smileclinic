@@ -1,0 +1,18 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch();
+const page = await b.newPage({ viewport: { width: 1440, height: 900 } });
+const errs = []; page.on('pageerror', e => errs.push(e.message));
+page.on('requestfailed', r => errs.push('запрос не прошёл: ' + r.url().slice(0,80)));
+const t0 = Date.now();
+await page.goto('https://mihatal.github.io/smileclinic/certificate/', { waitUntil: 'load' });
+await page.waitForTimeout(1500);
+console.log('загрузка боевой страницы:', ((Date.now()-t0)/1000).toFixed(1), 'с');
+await page.fill('#fName','Сергей'); await page.fill('#fNum','N005'); await page.fill('#fVal','5000');
+await page.click('button[data-add="12"]');
+await page.waitForTimeout(400);
+const [d] = await Promise.all([page.waitForEvent('download'), page.click('#btnPdf')]);
+await d.saveAs(process.cwd() + '/live.pdf');
+await page.screenshot({ path: 'live.png' });
+console.log('скачано:', d.suggestedFilename());
+console.log('ошибки:', errs.length ? errs : 'нет');
+await b.close();

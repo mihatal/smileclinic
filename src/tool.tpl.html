@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SmileClinic — генератор сертификатов</title>
-<meta name="description" content="Инструмент выпуска подарочных сертификатов SmileClinic: PDF и PNG на фирменном макете.">
+<title>SmileClinic — генератор сертификатов и бейджей</title>
+<meta name="description" content="Инструмент выпуска подарочных сертификатов и бейджей SmileClinic: PDF и PNG на фирменных макетах.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1c1a'/%3E%3Cpath d='M9 14a7 7 0 0 0 14 0' fill='none' stroke='%23a8926a' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 @font-face{font-family:'CertSans';src:url(data:font/ttf;base64,{{FONT_REG_B64}}) format('truetype');font-weight:400;font-display:block}
 @font-face{font-family:'CertSans';src:url(data:font/ttf;base64,{{FONT_BOLD_B64}}) format('truetype');font-weight:700;font-display:block}
+@font-face{font-family:'BadgeSans';src:url(data:font/otf;base64,{{FONT_GOTHAM_B64}}) format('opentype');font-weight:500;font-display:block}
 :root{
   --bg:#121211; --panel:#1c1c1a; --panel2:#232320; --line:#33322d;
   --gold:#a8926a;
@@ -28,17 +29,21 @@ body{
 .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
 .brand b{font-weight:700;font-size:20px;letter-spacing:.02em}
 .brand span{font-weight:400;font-size:20px;color:var(--muted)}
-.sub{color:var(--muted);font-size:13px;margin:0 0 22px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.docsw{display:flex;gap:8px;margin-bottom:18px}
+.docsw button{flex:1;background:transparent;border:1px solid var(--line);color:var(--muted);font:inherit;
+  font-size:14px;padding:10px 6px;border-radius:10px;cursor:pointer}
+.docsw button.on{border-color:var(--gold);color:var(--gold);background:rgba(168,146,106,.08);font-weight:700}
 .tabs{display:flex;gap:6px;background:var(--panel2);padding:4px;border-radius:10px;margin-bottom:22px}
 .tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;padding:8px 6px;border-radius:7px;cursor:pointer}
 .tabs button.on{background:var(--gold);color:#191813;font-weight:700}
 label{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .field{margin-bottom:16px}
-input[type=text],textarea,select{
+input[type=text],input[type=number],textarea,select{
   width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
   color:var(--txt);font:inherit;padding:10px 12px;outline:none;resize:vertical
 }
-input[type=text]:focus,textarea:focus,select:focus{border-color:var(--gold)}
+input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{border-color:var(--gold)}
 textarea{line-height:1.5}
 .row{display:flex;gap:12px}
 .row>*{flex:1;min-width:0}
@@ -89,92 +94,164 @@ canvas{display:block;width:var(--pw,405px);height:auto}
 <div class="app">
   <aside class="panel">
     <div class="brand"><b>smile</b><span>clinic</span></div>
-    <p class="sub">Генератор подарочных сертификатов</p>
+    <p class="sub" id="subTitle">Генератор подарочных сертификатов</p>
 
-    <div class="tabs">
-      <button id="tabOne" class="on">Один сертификат</button>
-      <button id="tabBatch">Пакетом</button>
+    <div class="docsw">
+      <button id="docCert" class="on">Сертификаты</button>
+      <button id="docBadge">Бейджи</button>
     </div>
 
-    <!-- ОДИН -->
-    <div id="paneOne">
-      <div class="field">
-        <label for="fName">Имя получателя</label>
-        <input type="text" id="fName" placeholder="пусто">
-        <div class="hint">Подставляется в текст вместо {имя}. Пусто — фраза начнётся с «Этот сертификат…»</div>
-        <div class="hint">Поля ниже тоже можно оставлять пустыми: строка просто не печатается.</div>
-        <div class="hint warn" id="nameWarn"></div>
+    <!-- ============ СЕРТИФИКАТЫ ============ -->
+    <div id="rootCert">
+      <div class="tabs">
+        <button id="tabOne" class="on">Один сертификат</button>
+        <button id="tabBatch">Пакетом</button>
       </div>
-      <div class="row">
+
+      <!-- ОДИН -->
+      <div id="paneOne">
         <div class="field">
-          <label for="fNum">Номер</label>
-          <input type="text" id="fNum" placeholder="пусто">
-          <div class="mini"><button id="btnNext">Следующий номер</button></div>
-          <label class="check"><input type="checkbox" id="fAuto"> увеличивать после скачивания PDF</label>
+          <label for="fName">Имя получателя</label>
+          <input type="text" id="fName" placeholder="пусто">
+          <div class="hint">Подставляется в текст вместо {имя}. Пусто — фраза начнётся с «Этот сертификат…»</div>
+          <div class="hint">Поля ниже тоже можно оставлять пустыми: строка просто не печатается.</div>
+          <div class="hint warn" id="nameWarn"></div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="fNum">Номер</label>
+            <input type="text" id="fNum" placeholder="пусто">
+            <div class="mini"><button id="btnNext">Следующий номер</button></div>
+            <label class="check"><input type="checkbox" id="fAuto"> увеличивать после скачивания PDF</label>
+          </div>
+          <div class="field">
+            <label for="fVal">Номинал</label>
+            <input type="text" id="fVal" placeholder="пусто">
+            <div class="mini">
+              <button data-val="3000">3 000</button>
+              <button data-val="5000">5 000</button>
+              <button data-val="10000">10 000</button>
+            </div>
+          </div>
         </div>
         <div class="field">
-          <label for="fVal">Номинал</label>
-          <input type="text" id="fVal" placeholder="пусто">
+          <label for="fDate">Срок действия</label>
+          <input type="text" id="fDate" placeholder="пусто">
           <div class="mini">
-            <button data-val="3000">3 000</button>
-            <button data-val="5000">5 000</button>
-            <button data-val="10000">10 000</button>
+            <button data-add="3">+3 мес</button>
+            <button data-add="6">+6 мес</button>
+            <button data-add="12">+1 год</button>
+            <button data-add="0">Убрать строку</button>
           </div>
         </div>
       </div>
-      <div class="field">
-        <label for="fDate">Срок действия</label>
-        <input type="text" id="fDate" placeholder="пусто">
-        <div class="mini">
-          <button data-add="3">+3 мес</button>
-          <button data-add="6">+6 мес</button>
-          <button data-add="12">+1 год</button>
-          <button data-add="0">Убрать строку</button>
+
+      <!-- ПАКЕТ -->
+      <div id="paneBatch" class="hidden">
+        <div class="field">
+          <label for="fBatch">Список сертификатов</label>
+          <textarea id="fBatch" rows="9" placeholder="имя; номер; номинал&#10;имя; номер; номинал"></textarea>
+          <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
+          <div class="hint" id="batchInfo"></div>
         </div>
       </div>
-    </div>
 
-    <!-- ПАКЕТ -->
-    <div id="paneBatch" class="hidden">
-      <div class="field">
-        <label for="fBatch">Список сертификатов</label>
-        <textarea id="fBatch" rows="9" placeholder="имя; номер; номинал&#10;имя; номер; номинал"></textarea>
-        <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
-        <div class="hint" id="batchInfo"></div>
-      </div>
-    </div>
-
-    <details id="settings">
-      <summary>Текст и подвал (сохраняются в браузере)</summary>
-      <div class="field">
-        <label for="fBody">Текст сертификата</label>
-        <textarea id="fBody" rows="4" placeholder="пусто"></textarea>
-        <div class="hint">Переносы строк уважаются. Слишком длинные строки переносятся сами, шрифт ужимается, если строк много.</div>
-      </div>
-      <div class="row">
-        <div class="field"><label for="fH1">Режим работы, строка 1</label><input type="text" id="fH1" placeholder="пусто"></div>
-        <div class="field"><label for="fH2">Строка 2</label><input type="text" id="fH2" placeholder="пусто"></div>
-      </div>
-      <div class="field"><label for="fC1">Призыв, строка 1</label><input type="text" id="fC1" placeholder="пусто"></div>
-      <div class="field"><label for="fC2">Призыв, строка 2</label><input type="text" id="fC2" placeholder="пусто"></div>
-      <div class="field"><label for="fPhone">Телефон</label><input type="text" id="fPhone" placeholder="пусто"></div>
-      <div class="field">
-        <label for="fFont">Шрифт</label>
-        <select id="fFont">
-          <option value="builtin">Как в макете (Montserrat)</option>
-          <option value="custom">Свой шрифт (.ttf / .otf)</option>
-        </select>
-        <div id="fontUpload" class="hidden">
-          <div class="row" style="margin-top:10px">
-            <div><label for="fFontReg">Обычный</label><input type="file" id="fFontReg" accept=".ttf,.otf"></div>
-            <div><label for="fFontBold">Жирный</label><input type="file" id="fFontBold" accept=".ttf,.otf"></div>
+      <details id="settings">
+        <summary>Текст и подвал (сохраняются в браузере)</summary>
+        <div class="field">
+          <label for="fBody">Текст сертификата</label>
+          <textarea id="fBody" rows="4" placeholder="пусто"></textarea>
+          <div class="hint">Переносы строк уважаются. Слишком длинные строки переносятся сами, шрифт ужимается, если строк много.</div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="fH1">Режим работы, строка 1</label><input type="text" id="fH1" placeholder="пусто"></div>
+          <div class="field"><label for="fH2">Строка 2</label><input type="text" id="fH2" placeholder="пусто"></div>
+        </div>
+        <div class="field"><label for="fC1">Призыв, строка 1</label><input type="text" id="fC1" placeholder="пусто"></div>
+        <div class="field"><label for="fC2">Призыв, строка 2</label><input type="text" id="fC2" placeholder="пусто"></div>
+        <div class="field"><label for="fPhone">Телефон</label><input type="text" id="fPhone" placeholder="пусто"></div>
+        <div class="field">
+          <label for="fFont">Шрифт</label>
+          <select id="fFont">
+            <option value="builtin">Как в макете (Montserrat)</option>
+            <option value="custom">Свой шрифт (.ttf / .otf)</option>
+          </select>
+          <div id="fontUpload" class="hidden">
+            <div class="row" style="margin-top:10px">
+              <div><label for="fFontReg">Обычный</label><input type="file" id="fFontReg" accept=".ttf,.otf"></div>
+              <div><label for="fFontBold">Жирный</label><input type="file" id="fFontBold" accept=".ttf,.otf"></div>
+            </div>
+            <div class="hint" id="fontState"></div>
+            <div class="hint">Файлы никуда не отправляются и в репозиторий не попадают, но и не сохраняются: после перезагрузки страницы их нужно выбрать заново. Так можно печатать фирменным Gotham Pro, не выкладывая платный шрифт в открытый доступ.</div>
           </div>
-          <div class="hint" id="fontState"></div>
-          <div class="hint">Файлы никуда не отправляются и в репозиторий не попадают, но и не сохраняются: после перезагрузки страницы их нужно выбрать заново. Так можно печатать фирменным Gotham Pro, не выкладывая платный шрифт в открытый доступ.</div>
+        </div>
+        <div class="mini"><button id="btnReset">Сбросить настройки</button></div>
+      </details>
+    </div>
+
+    <!-- ============ БЕЙДЖИ ============ -->
+    <div id="rootBadge" class="hidden">
+      <div class="tabs">
+        <button id="bTabOne" class="on">Один бейдж</button>
+        <button id="bTabBatch">Пакетом</button>
+      </div>
+
+      <div id="bPaneOne">
+        <div class="field">
+          <label for="bName">Имя и фамилия</label>
+          <input type="text" id="bName" placeholder="пусто">
+          <div class="hint">Верхняя строка бейджа. Длинное имя само ужимается по кеглю, очень длинное переносится на две строки.</div>
+        </div>
+        <div class="field">
+          <label for="bRole">Должность</label>
+          <input type="text" id="bRole" placeholder="пусто">
+          <div class="hint">Нижняя строка. Можно оставить пустой — имя останется на своём месте.</div>
+          <div class="mini">
+            <button data-role="Медсестра ЦСО">Медсестра ЦСО</button>
+            <button data-role="Врач-стоматолог">Врач-стоматолог</button>
+            <button data-role="Администратор">Администратор</button>
+            <button data-role="Ассистент врача">Ассистент врача</button>
+          </div>
         </div>
       </div>
-      <div class="mini"><button id="btnReset">Сбросить настройки</button></div>
-    </details>
+
+      <div id="bPaneBatch" class="hidden">
+        <div class="field">
+          <label for="bBatch">Список сотрудников</label>
+          <textarea id="bBatch" rows="10" placeholder="Юлия Момот; Медсестра ЦСО&#10;Иван Петров; Врач-стоматолог"></textarea>
+          <div class="hint">Строка = бейдж: <b>имя; должность</b>. Разделитель — точка с запятой или табуляция, вставляется прямо из таблицы.</div>
+          <div class="hint" id="bBatchInfo"></div>
+        </div>
+      </div>
+
+      <details id="bSettings">
+        <summary>Печать и оформление (сохраняются в браузере)</summary>
+        <div class="field">
+          <label for="bSheet">Что скачивать</label>
+          <select id="bSheet">
+            <option value="single">Отдельные страницы — бейдж на страницу</option>
+            <option value="a4">Лист A4 — сетка с метками реза</option>
+          </select>
+        </div>
+        <div id="bSheetOpts" class="hidden">
+          <div class="row">
+            <div class="field">
+              <label for="bWidth">Ширина бейджа, мм</label>
+              <input type="number" id="bWidth" min="40" max="200" step="1" value="90">
+              <div class="hint" id="bSizeInfo"></div>
+            </div>
+            <div class="field">
+              <label for="bGap">Зазор, мм</label>
+              <input type="number" id="bGap" min="0" max="20" step="1" value="4">
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="bMarks" checked> метки реза по углам</label>
+        </div>
+        <label class="check"><input type="checkbox" id="bUpper" checked> печатать ПРОПИСНЫМИ, как на макете</label>
+        <div class="hint" style="margin-top:16px">Печатается фирменным <b>Gotham Pro Medium</b> — тем же шрифтом, что в макете дизайнера.</div>
+        <div class="mini"><button id="bReset">Сбросить настройки</button></div>
+      </details>
+    </div>
   </aside>
 
   <main class="stage">
@@ -191,14 +268,18 @@ canvas{display:block;width:var(--pw,405px);height:auto}
 <script>{{FONTKIT}}</script>
 <script>
 "use strict";
-/* ================= данные шаблона ================= */
+/* ================= данные шаблонов ================= */
 const TPL_PDF_B64 = "{{TPL_PDF_B64}}";
 const BG_PNG_B64  = "{{BG_B64}}";
 const FONT_REG_B64  = "{{FONT_REG_B64}}";
 const FONT_BOLD_B64 = "{{FONT_BOLD_B64}}";
+const BADGE_TPL_B64 = "{{BADGE_TPL_B64}}";
+const BADGE_BG_B64  = "{{BADGE_BG_B64}}";
+const FONT_GOTHAM_B64 = "{{FONT_GOTHAM_B64}}";   // Gotham Pro Medium, тот же шрифт, что в макете
 
-/* ================= раскладка (в пунктах страницы 1080×1600) ================= */
-const L = {
+/* ================= раскладки =================
+   Координаты — пункты страницы макета, отсчёт сверху; y текста это базовая линия. */
+const L_CERT = {
   W:1080, H:1600, CX:540,
   bg:{r:28/255,g:28/255,b:26/255},           // цвет фона макета
   cover:{y0:520, y1:1425},                    // зона, которую перерисовываем
@@ -211,13 +292,36 @@ const L = {
   cta:{size:25, y1:1306.75, y2:1341.75},
   phone:{size:25, y:1376.75}
 };
-const DEFAULTS = {
+/* Бейдж выверен по макету «бейдж текст.pdf»: макет свёрстан Gotham Pro Medium
+   (совпадение по глифам 2 px, IoU 0,92). Капитель имени 36,5 pt (базовая линия 282),
+   капитель должности 21 pt (базовая линия 341), обе строки по центру 517.
+   Шрифт макета — Gotham Pro Medium — вшит в инструмент, поэтому печать совпадает
+   с макетом один в один. */
+const L_BADGE = {
+  W:1034, H:542, CX:517,
+  darkBottom:389,                             // ниже — золотая полоса, туда не печатаем
+  /* цвета макета — нужны только для листа A4: там фон перерисовывается своими
+     прямоугольниками, потому что pdf-lib теряет прозрачность фигмовской формы
+     при embedPage. Значения сняты пипеткой с badge_template.pdf. */
+  paper:{bg:{r:26/255,g:26/255,b:24/255}, gold:{r:127/255,g:113/255,b:71/255},
+         border:{r:0,g:0,b:0}, borderW:1},
+  name:{size:51.5, track:0.4,  base:282, maxW:880, minSize:30, lh:1.2},
+  role:{size:29.5, track:0.25, base:341, maxW:900, minSize:18, lh:1.3}
+};
+
+const DEFAULTS_CERT = {
   body:"{имя}, этот сертификат дает возможность\nвоспользоваться любыми услугами\nэстетической стоматологии\nSmileClinic",
   h1:"Мы работаем ежедневно", h2:"с 9:00 до 21:00",
   c1:"Чтобы воспользоваться сертификатом,", c2:"запишитесь на прием по телефону",
-  phone:"+7 (812) 241 12 88", date:"", font:"builtin"
+  phone:"+7 (812) 241 12 88", date:"", font:"builtin",
+  name:"", num:"", val:"", batch:"", mode:"one"
 };
-const STORE = "smileclinic-cert-v1";
+const DEFAULTS_BADGE = {
+  name:"", role:"", batch:"", mode:"one", font:"builtin",
+  upper:true, sheet:"single", width:90, gap:4, marks:true
+};
+const STORE_CERT = "smileclinic-cert-v1";
+const STORE_BADGE = "smileclinic-badge-v1";
 
 /* ================= утилиты ================= */
 const $ = id => document.getElementById(id);
@@ -251,30 +355,82 @@ function download(blob, name){
   a.href = url; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1500);
 }
+const mm = v => v*72/25.4;
 
-/* ================= шрифты ================= */
-const fonts = { custom:false };
+/* ================= состояние ================= */
+const ST = {
+  cert:  Object.assign({}, DEFAULTS_CERT),
+  badge: Object.assign({}, DEFAULTS_BADGE)
+};
+let doc = "cert";                              // какой документ сейчас на столе
+const S = () => ST[doc];
+const L = () => doc === "cert" ? L_CERT : L_BADGE;
+
+function loadStore(){
+  try{
+    const c = localStorage.getItem(STORE_CERT);
+    if(c) Object.assign(ST.cert, JSON.parse(c));
+    const b = localStorage.getItem(STORE_BADGE);
+    if(b) Object.assign(ST.badge, JSON.parse(b));
+    const d = localStorage.getItem("smileclinic-doc");
+    if(d === "badge" || d === "cert") doc = d;
+  }catch(e){}
+}
+function saveStore(){
+  const c = ST.cert;
+  const keepC = {body:c.body,h1:c.h1,h2:c.h2,c1:c.c1,c2:c.c2,phone:c.phone,date:c.date,num:c.num,
+                 font:c.font,auto:c.auto,settingsOpen:c.settingsOpen};
+  const b = ST.badge;
+  const keepB = {role:b.role,font:b.font,upper:b.upper,sheet:b.sheet,width:b.width,gap:b.gap,
+                 marks:b.marks,settingsOpen:b.settingsOpen};
+  try{
+    localStorage.setItem(STORE_CERT, JSON.stringify(keepC));
+    localStorage.setItem(STORE_BADGE, JSON.stringify(keepB));
+    localStorage.setItem("smileclinic-doc", doc);
+  }catch(e){}
+}
+
+/* ================= шрифты =================
+   У каждого документа своя встроенная пара: сертификат свёрстан Montserrat,
+   бейдж — геометрическим гротеском (встроен Jost 500/600). */
+const BUILTIN = {
+  cert:  {reg:{b64:FONT_REG_B64,      family:"CertSans",  weight:400},
+          bold:{b64:FONT_BOLD_B64,    family:"CertSans",  weight:700}},
+  badge: {reg:{b64:FONT_GOTHAM_B64,   family:"BadgeSans", weight:500},
+          bold:{b64:FONT_GOTHAM_B64,   family:"BadgeSans", weight:500}}
+};
+const fontCache = {};
+function builtinFont(which, kind){
+  const key = which+"/"+kind;
+  if(!fontCache[key]){
+    const b = BUILTIN[which][kind];
+    fontCache[key] = {bytes:b64ToBytes(b.b64), family:b.family, weight:b.weight, fk:null, custom:false};
+  }
+  return fontCache[key];
+}
+const CUSTOM = {cert:{}, badge:{}};
+function F(kind){
+  const c = CUSTOM[doc][kind];
+  return (S().font === "custom" && c) ? c : builtinFont(doc, kind);
+}
+function usingCustom(){ return S().font === "custom" && (CUSTOM[doc].reg || CUSTOM[doc].bold); }
 async function useCustomFont(kind, arrayBuffer){
-  const family = kind==="reg" ? "CertCustomReg" : "CertCustomBold";
+  const family = doc+"Custom"+kind;
   const face = new FontFace(family, arrayBuffer.slice(0));
   await face.load(); document.fonts.add(face);
   const bytes = new Uint8Array(arrayBuffer);
   let fk = null; try{ fk = fontkit.create(bytes); }catch(e){}
-  fonts[kind] = { bytes, family, weight:400, fk, custom:true };
-  fonts.custom = true;
+  CUSTOM[doc][kind] = {bytes, family, weight:400, fk, custom:true};
 }
-function builtin(kind){
-  return kind === "bold"
-    ? {bytes:b64ToBytes(FONT_BOLD_B64), family:"CertSans", weight:700, fk:null, custom:false}
-    : {bytes:b64ToBytes(FONT_REG_B64),  family:"CertSans", weight:400, fk:null, custom:false};
-}
-fonts.reg = builtin("reg"); fonts.bold = builtin("bold");
-function fam(kind, alt){ return alt ? "CertSans" : fonts[kind].family; }
-function trackOf(v){ return fonts.custom ? 0 : v; }   // трекинг калибровали под макетный шрифт
+function fam(kind, alt){ return alt ? builtinFont(doc, kind).family : F(kind).family; }
+function wgt(kind, alt){ return alt ? builtinFont(doc, kind).weight : F(kind).weight; }
+/** трекинг калибровали под макетный шрифт: у сертификата — Montserrat,
+    у бейджа — вшитый Gotham Pro Medium */
+function trackOf(v){ return usingCustom() ? 0 : v; }
 
 /** режет строку на куски: alt=true — символы, которых нет в подключённом шрифте (берём из встроенного) */
 function segs(s, kind){
-  const f = fonts[kind];
+  const f = F(kind);
   if(!f.custom || !f.fk) return [{s, alt:false}];
   const out = []; let cur = "", curAlt = null;
   for(const ch of s){
@@ -286,40 +442,27 @@ function segs(s, kind){
   return out;
 }
 
-/* ================= состояние ================= */
-let S = Object.assign({}, DEFAULTS, {name:"", num:"", val:"", batch:"", mode:"one"});
-function loadStore(){
-  try{
-    const raw = localStorage.getItem(STORE);
-    if(raw) Object.assign(S, JSON.parse(raw));
-  }catch(e){}
-}
-function saveStore(){
-  const keep = {body:S.body,h1:S.h1,h2:S.h2,c1:S.c1,c2:S.c2,phone:S.phone,date:S.date,num:S.num,
-                font:S.font,auto:S.auto,settingsOpen:S.settingsOpen};
-  try{ localStorage.setItem(STORE, JSON.stringify(keep)); }catch(e){}
-}
-
-/* ================= построение макета ================= */
+/* ================= измерение и переносы ================= */
 const measureCv = document.createElement("canvas").getContext("2d");
 function mText(t, size, kind, track){
   measureCv.letterSpacing = (track||0)+"px";
   let w = 0;
   segs(t, kind).forEach(sg=>{
-    measureCv.font = (kind==="bold"?"700 ":"400 ")+size+"px "+fam(kind, sg.alt);
+    measureCv.font = wgt(kind,sg.alt)+" "+size+"px "+fam(kind, sg.alt);
     w += measureCv.measureText(sg.s).width;
   });
   measureCv.letterSpacing = "0px";
   return w - (track||0);           // без хвостового трекинга
 }
-function wrap(text, size, track, maxW){
+function wrap(text, size, track, maxW, kind){
+  const k = kind || "reg";
   const out = [];
   // слово длиннее строки рвём по буквам, иначе вылезет за поля
   const chop = w => {
     const parts = [];
     let cur = "";
     for(const ch of w){
-      if(cur && mText(cur+ch,size,"reg",track) > maxW){ parts.push(cur); cur = ch; }
+      if(cur && mText(cur+ch,size,k,track) > maxW){ parts.push(cur); cur = ch; }
       else cur += ch;
     }
     if(cur) parts.push(cur);
@@ -327,18 +470,20 @@ function wrap(text, size, track, maxW){
   };
   String(text).split("\n").forEach(par=>{
     const words = par.split(/\s+/).filter(Boolean).flatMap(w =>
-      mText(w,size,"reg",track) > maxW ? chop(w) : [w]);
+      mText(w,size,k,track) > maxW ? chop(w) : [w]);
     if(!words.length){ out.push(""); return; }
     let line = words[0];
     for(let i=1;i<words.length;i++){
       const t = line+" "+words[i];
-      if(mText(t,size,"reg",track) <= maxW) line = t;
+      if(mText(t,size,k,track) <= maxW) line = t;
       else { out.push(line); line = words[i]; }
     }
     out.push(line);
   });
   return out;
 }
+
+/* ================= сертификат: список операций ================= */
 function bodyText(tpl, name){
   let t = String(tpl||"");
   const n = String(name||"").trim();
@@ -349,79 +494,126 @@ function bodyText(tpl, name){
   }
   return t;
 }
-/** возвращает список операций отрисовки */
-function buildOps(data){
+function buildCertOps(data){
+  const K = L_CERT;
   const ops = [];
-  ops.push({t:"rect", x:0, y:L.cover.y0, w:L.W, h:L.cover.y1-L.cover.y0, fill:L.bg});
+  ops.push({t:"rect", x:0, y:K.cover.y0, w:K.W, h:K.cover.y1-K.cover.y0, fill:K.bg});
 
   // основной текст: подбор кегля
-  let size = L.body.size, lh = L.body.lh, lines = [];
-  const avail = L.body.bottom - L.body.top;
+  let size = K.body.size, lh = K.body.lh, lines = [];
+  const avail = K.body.bottom - K.body.top;
   for(;;){
-    lines = wrap(bodyText(data.body, data.name), size, trackOf(L.body.track), L.body.maxW*size/L.body.size);
+    lines = wrap(bodyText(data.body, data.name), size, trackOf(K.body.track), K.body.maxW*size/K.body.size);
     const h = (lines.length-1)*lh + size*0.9;
-    if(h <= avail || size <= L.body.minSize) break;
+    if(h <= avail || size <= K.body.minSize) break;
     size -= 1; lh = Math.round(size*1.45);
   }
-  const first = L.body.centerY - (lines.length-1)*lh/2;
+  const first = K.body.centerY - (lines.length-1)*lh/2;
   lines.forEach((ln,i)=>{ if(ln) ops.push({t:"text", s:ln, size, kind:"reg",
-    track:trackOf(L.body.track), y:first+i*lh}); });
+    track:trackOf(K.body.track), y:first+i*lh}); });
 
   // номер / номинал
   const numLine = data.num ? "Номер сертификата: "+data.num : "";
   const valLine = data.val ? "Номинал: "+money(data.val) : "";
   const pair = [numLine, valLine].filter(Boolean);
   if(pair.length===2){
-    ops.push({t:"text", s:numLine, size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.y1});
-    ops.push({t:"text", s:valLine, size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.y2});
+    ops.push({t:"text", s:numLine, size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.y1});
+    ops.push({t:"text", s:valLine, size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.y2});
   } else if(pair.length===1){
-    ops.push({t:"text", s:pair[0], size:L.accent.size, kind:"bold", track:trackOf(L.accent.track), y:L.accent.ySolo});
+    ops.push({t:"text", s:pair[0], size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.ySolo});
   }
 
   // срок действия
   if(data.date) ops.push({t:"text", s:"Срок действия сертификата до "+data.date,
-    size:L.srok.size, kind:"reg", track:trackOf(L.srok.track), y:L.srok.y});
+    size:K.srok.size, kind:"reg", track:trackOf(K.srok.track), y:K.srok.y});
 
   // разделитель
-  ops.push({t:"rect", x:L.divider.x0, y:L.divider.y, w:L.divider.x1-L.divider.x0, h:L.divider.h,
+  ops.push({t:"rect", x:K.divider.x0, y:K.divider.y, w:K.divider.x1-K.divider.x0, h:K.divider.h,
     fill:{r:1,g:1,b:1}});
 
   // подвал
-  const ft = trackOf(L.foot.track);
-  if(data.h1) ops.push({t:"text", s:data.h1, size:L.hours.size, kind:"reg", track:ft, y:L.hours.y1});
-  if(data.h2) ops.push({t:"text", s:data.h2, size:L.hours.size, kind:"reg", track:ft, y:L.hours.y2});
-  if(data.c1) ops.push({t:"text", s:data.c1, size:L.cta.size, kind:"reg", track:ft, y:L.cta.y1});
-  if(data.c2) ops.push({t:"text", s:data.c2, size:L.cta.size, kind:"reg", track:ft, y:L.cta.y2});
-  if(data.phone) ops.push({t:"text", s:data.phone, size:L.phone.size, kind:"bold", track:ft, y:L.phone.y});
+  const ft = trackOf(K.foot.track);
+  if(data.h1) ops.push({t:"text", s:data.h1, size:K.hours.size, kind:"reg", track:ft, y:K.hours.y1});
+  if(data.h2) ops.push({t:"text", s:data.h2, size:K.hours.size, kind:"reg", track:ft, y:K.hours.y2});
+  if(data.c1) ops.push({t:"text", s:data.c1, size:K.cta.size, kind:"reg", track:ft, y:K.cta.y1});
+  if(data.c2) ops.push({t:"text", s:data.c2, size:K.cta.size, kind:"reg", track:ft, y:K.cta.y2});
+  if(data.phone) ops.push({t:"text", s:data.phone, size:K.phone.size, kind:"bold", track:ft, y:K.phone.y});
   return ops;
 }
 
+/* ================= бейдж: список операций ================= */
+function badgeCase(s, data){
+  const t = String(s||"").trim();
+  return data.upper ? t.toUpperCase() : t;
+}
+/** ужимает кегль, пока строка не влезет; если и на минимуме не влезла — переносит */
+function fitLines(text, spec, kind){
+  const base = spec.track;
+  let size = spec.size, track = base;
+  while(size > spec.minSize && mText(text, size, kind, track) > spec.maxW){
+    size -= 0.5;
+    track = base * size / spec.size;
+  }
+  if(mText(text, size, kind, track) <= spec.maxW) return {size, track, lines:[text]};
+  return {size, track, lines:wrap(text, size, track, spec.maxW, kind)};
+}
+function buildBadgeOps(data){
+  const K = L_BADGE;
+  const ops = [];
+  const name = badgeCase(data.name, data);
+  const role = badgeCase(data.role, data);
+
+  if(name){
+    const f = fitLines(name, K.name, "reg");
+    const step = f.size * K.name.lh;
+    // строки заканчиваются на базовой линии макета, лишние уходят вверх — к должности не лезем
+    f.lines.forEach((ln,i)=>{
+      const y = K.name.base - (f.lines.length-1-i)*step;
+      if(ln) ops.push({t:"text", s:ln, size:f.size, kind:"reg", track:f.track, y});
+    });
+  }
+  if(role){
+    const f = fitLines(role, K.role, "bold");
+    const step = f.size * K.role.lh;
+    // блок должности центрируется относительно своей базовой линии
+    const first = K.role.base - (f.lines.length-1)*step/2;
+    f.lines.forEach((ln,i)=>{
+      if(ln) ops.push({t:"text", s:ln, size:f.size, kind:"bold", track:f.track, y:first+i*step});
+    });
+  }
+  return ops;
+}
+const buildOps = data => doc === "cert" ? buildCertOps(data) : buildBadgeOps(data);
+
 /* ================= предпросмотр на canvas ================= */
 const cv = $("cv"), ctx = cv.getContext("2d");
-const bgImg = new Image(); let bgReady = false;
-bgImg.onload = ()=>{ bgReady = true; draw(); };
-bgImg.src = "data:image/png;base64,"+BG_PNG_B64;
+const BG = {cert:new Image(), badge:new Image()};
+let bgReady = {cert:false, badge:false};
+BG.cert.onload  = ()=>{ bgReady.cert = true; draw(); };
+BG.badge.onload = ()=>{ bgReady.badge = true; draw(); };
+BG.cert.src  = "data:image/png;base64,"+BG_PNG_B64;
+BG.badge.src = "data:image/png;base64,"+BADGE_BG_B64;
 
-/** что показываем в предпросмотре: в пакетном режиме — первый сертификат списка */
+/** что показываем в предпросмотре: в пакетном режиме — первый в списке */
 function previewData(){
-  if(S.mode === "batch"){
+  if(S().mode === "batch"){
     const list = parseBatch();
     if(list.length) return list[0];
   }
-  return S;
+  return S();
 }
 function draw(){
-  if(!bgReady) return;
-  const k = cv.width / L.W;                    // 2160/1080 = 2
+  if(!bgReady[doc]) return;
+  const K = L();
+  const k = cv.width / K.W;                    // 2160/1080 и 2068/1034 — оба ровно 2
   ctx.setTransform(k,0,0,k,0,0);
-  ctx.clearRect(0,0,L.W,L.H);
-  ctx.drawImage(bgImg,0,0,L.W,L.H);
+  ctx.clearRect(0,0,K.W,K.H);
+  ctx.drawImage(BG[doc],0,0,K.W,K.H);
   const data = previewData();
   const info = $("pvInfo");
-  if(info) info.textContent = S.mode === "batch" && parseBatch().length
-    ? "первый из списка" : "1080 × 1600";
-  const ops = buildOps(data);
-  ops.forEach(op=>{
+  if(info) info.textContent = S().mode === "batch" && parseBatch().length
+    ? "первый из списка" : K.W+" × "+K.H;
+  buildOps(data).forEach(op=>{
     if(op.t==="rect"){
       ctx.fillStyle = `rgb(${Math.round(op.fill.r*255)},${Math.round(op.fill.g*255)},${Math.round(op.fill.b*255)})`;
       ctx.fillRect(op.x,op.y,op.w,op.h);
@@ -430,203 +622,399 @@ function draw(){
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "alphabetic";
       const parts = segs(op.s, op.kind);
-      const setFont = alt => ctx.font = (op.kind==="bold"?"700 ":"400 ")+op.size+"px "+fam(op.kind, alt);
+      const setFont = alt => ctx.font = wgt(op.kind,alt)+" "+op.size+"px "+fam(op.kind, alt);
       let total = 0;
       parts.forEach(sg=>{ setFont(sg.alt); total += ctx.measureText(sg.s).width; });
-      let x = L.CX - (total - (op.track||0))/2;
+      let x = K.CX - (total - (op.track||0))/2;
       parts.forEach(sg=>{ setFont(sg.alt); ctx.fillText(sg.s, x, op.y);
         x += ctx.measureText(sg.s).width; });
       ctx.letterSpacing = "0px";
     }
   });
 }
+function syncCanvas(){
+  const K = L();
+  cv.width = K.W*2; cv.height = K.H*2;
+  setZoom(zoomDefault());
+}
 
 /* ================= PDF ================= */
 const { PDFDocument, rgb, setCharacterSpacing } = PDFLib;
-async function makePdf(list){
-  const tpl = await PDFDocument.load(b64ToBytes(TPL_PDF_B64));
-  const doc = await PDFDocument.create();
-  doc.registerFontkit(fontkit);
-  const opsPerPage = list.map(buildOps);
-  const needFallback = fonts.custom && opsPerPage.some(ops => ops.some(op =>
-    op.t==="text" && segs(op.s, op.kind).some(sg=>sg.alt)));
 
-  const F = {
-    reg:  await doc.embedFont(fonts.reg.bytes,  {subset:true}),
-    bold: await doc.embedFont(fonts.bold.bytes, {subset:true}),
+/** переносит операции на страницу: tf = {ox, oy, k} — сдвиг в пунктах PDF и масштаб */
+function paintOps(page, ops, K, F2, tf){
+  const {ox, oy, k} = tf;
+  ops.forEach(op=>{
+    if(op.t==="rect"){
+      page.drawRectangle({x:ox+op.x*k, y:oy+(K.H-op.y-op.h)*k, width:op.w*k, height:op.h*k,
+        color:rgb(op.fill.r,op.fill.g,op.fill.b)});
+      return;
+    }
+    const tr = (op.track||0)*k, parts = segs(op.s, op.kind), size = op.size*k;
+    const total = parts.reduce((s,sg)=> s + F2(op.kind,sg.alt).widthOfTextAtSize(sg.s, size), 0)
+                  + tr*(op.s.length-1);
+    let x = ox + K.CX*k - total/2;
+    if(tr) page.pushOperators(setCharacterSpacing(tr));
+    parts.forEach(sg=>{
+      const f = F2(op.kind, sg.alt);
+      page.drawText(sg.s, {x, y:oy+(K.H-op.y)*k, size, font:f, color:rgb(1,1,1)});
+      x += f.widthOfTextAtSize(sg.s, size) + tr*sg.s.length;
+    });
+    if(tr) page.pushOperators(setCharacterSpacing(0));
+  });
+}
+/** подложка бейджа своими примитивами: тёмное поле, золотая полоса, рамка */
+function drawBadgePaper(page, tf){
+  const K = L_BADGE, P = K.paper, {ox, oy, k} = tf;
+  page.drawRectangle({x:ox, y:oy, width:K.W*k, height:K.H*k, color:rgb(P.bg.r,P.bg.g,P.bg.b)});
+  const goldH = (K.H - K.darkBottom)*k;
+  page.drawRectangle({x:ox, y:oy, width:K.W*k, height:goldH, color:rgb(P.gold.r,P.gold.g,P.gold.b)});
+  const bw = P.borderW*k;
+  page.drawRectangle({x:ox+bw/2, y:oy+bw/2, width:K.W*k-bw, height:K.H*k-bw,
+    borderColor:rgb(P.border.r,P.border.g,P.border.b), borderWidth:bw, opacity:0});
+}
+
+/** готовит документ, шрифты и функцию выбора шрифта */
+async function newDoc(opsPerPage){
+  const out = await PDFDocument.create();
+  out.registerFontkit(fontkit);
+  const needFallback = usingCustom() && opsPerPage.some(ops => ops.some(op =>
+    op.t==="text" && segs(op.s, op.kind).some(sg=>sg.alt)));
+  // OTF (CFF) у pdf-lib ломается при сабсете — Gotham вшиваем целиком, он и так 23 КБ
+  const sub = doc !== "badge";
+  const E = {
+    reg:  await out.embedFont(F("reg").bytes,  {subset:sub}),
+    bold: await out.embedFont(F("bold").bytes, {subset:sub}),
   };
   if(needFallback){
-    F.altReg  = await doc.embedFont(builtin("reg").bytes,  {subset:true});
-    F.altBold = await doc.embedFont(builtin("bold").bytes, {subset:true});
+    E.altReg  = await out.embedFont(builtinFont(doc,"reg").bytes,  {subset:true});
+    E.altBold = await out.embedFont(builtinFont(doc,"bold").bytes, {subset:true});
   }
-  const pick = (kind, alt) => alt ? (kind==="bold"?F.altBold:F.altReg) : (kind==="bold"?F.bold:F.reg);
-
+  const pick = (kind, alt) => alt ? (kind==="bold"?E.altBold:E.altReg) : (kind==="bold"?E.bold:E.reg);
+  return {out, pick};
+}
+/** страница на документ — как есть, в размере макета */
+async function makePdf(list){
+  const K = L();
+  const tplB64 = doc === "cert" ? TPL_PDF_B64 : BADGE_TPL_B64;
+  const tpl = await PDFDocument.load(b64ToBytes(tplB64));
+  const opsPerPage = list.map(buildOps);
+  const {out, pick} = await newDoc(opsPerPage);
   for(const ops of opsPerPage){
-    const [page] = await doc.copyPages(tpl,[0]);
-    doc.addPage(page);
-    ops.forEach(op=>{
-      if(op.t==="rect"){
-        page.drawRectangle({x:op.x, y:L.H-op.y-op.h, width:op.w, height:op.h,
-          color:rgb(op.fill.r,op.fill.g,op.fill.b)});
-        return;
-      }
-      const tr = op.track||0, parts = segs(op.s, op.kind);
-      const total = parts.reduce((s,sg)=> s + pick(op.kind,sg.alt).widthOfTextAtSize(sg.s, op.size), 0)
-                    + tr*(op.s.length-1);
-      let x = L.CX - total/2;
-      if(tr) page.pushOperators(setCharacterSpacing(tr));
-      parts.forEach(sg=>{
-        const f = pick(op.kind, sg.alt);
-        page.drawText(sg.s, {x, y:L.H-op.y, size:op.size, font:f, color:rgb(1,1,1)});
-        x += f.widthOfTextAtSize(sg.s, op.size) + tr*sg.s.length;
-      });
-      if(tr) page.pushOperators(setCharacterSpacing(0));
-    });
+    const [page] = await out.copyPages(tpl,[0]);
+    out.addPage(page);
+    paintOps(page, ops, K, pick, {ox:0, oy:0, k:1});
   }
-  return new Blob([await doc.save()], {type:"application/pdf"});
+  return new Blob([await out.save()], {type:"application/pdf"});
+}
+/** сетка бейджей на A4 с метками реза */
+async function makeSheetPdf(list){
+  const K = L_BADGE;
+  const st = S();
+  const A4 = [mm(210), mm(297)], margin = mm(10);
+  const bw = mm(Number(st.width)||90), k = bw / K.W, bh = K.H*k, gap = mm(Number(st.gap)||0);
+  const cols = Math.max(1, Math.floor((A4[0]-2*margin+gap)/(bw+gap)));
+  const rows = Math.max(1, Math.floor((A4[1]-2*margin+gap)/(bh+gap)));
+  const perPage = cols*rows;
+  const gridW = cols*bw + (cols-1)*gap;
+  const x0 = (A4[0]-gridW)/2;
+  /** сколько рядов реально занято на этой странице — чтобы неполный лист не съезжал вверх */
+  const topOf = n => {
+    const r = Math.min(rows, Math.ceil(n/cols));
+    const h = r*bh + (r-1)*gap;
+    return (A4[1]-h)/2 + h;
+  };
+
+  const opsAll = list.map(buildOps);
+  const {out, pick} = await newDoc(opsAll);
+
+  for(let i=0;i<list.length;i++){
+    const slot = i % perPage;
+    let page;
+    if(slot === 0) page = out.addPage(A4);
+    else page = out.getPage(out.getPageCount()-1);
+    const onPage = Math.min(perPage, list.length - (i - slot));   // штук на этой странице
+    const c = slot % cols, r = Math.floor(slot / cols);
+    const ox = x0 + c*(bw+gap), oy = topOf(onPage) - (r+1)*bh - r*gap;
+    drawBadgePaper(page, {ox, oy, k});
+    paintOps(page, opsAll[i], K, pick, {ox, oy, k});
+    if(st.marks){
+      const m = mm(2.5), col = rgb(.55,.55,.5), th = .4;
+      [[ox,oy],[ox+bw,oy],[ox,oy+bh],[ox+bw,oy+bh]].forEach(([px,py])=>{
+        const dx = px===ox ? -m : 0, dy = py===oy ? -m : 0;
+        page.drawLine({start:{x:px+dx, y:py}, end:{x:px+dx+m, y:py}, thickness:th, color:col});
+        page.drawLine({start:{x:px, y:py+dy}, end:{x:px, y:py+dy+m}, thickness:th, color:col});
+      });
+    }
+  }
+  return {blob:new Blob([await out.save()], {type:"application/pdf"}), perPage, cols, rows};
+}
+
+/* ================= списки ================= */
+function parseBatch(){
+  const st = S();
+  return String(st.batch||"").split("\n").map(l=>l.trim()).filter(Boolean)
+    .filter(l=>!/^(имя|name|фио)\s*[;\t]/i.test(l))         // строка-заголовок из таблицы
+    .map(line=>{
+      const p = line.split(/[;\t]/).map(s=>s.trim());
+      return doc === "cert"
+        ? Object.assign({}, st, {name:p[0]||"", num:p[1]||"", val:p[2]||""})
+        : Object.assign({}, st, {name:p[0]||"", role:p[1]||st.role||""});
+    });
+}
+/** что печатаем: список бейджей/сертификатов */
+function printList(){
+  const st = S();
+  return st.mode === "batch" ? parseBatch() : [Object.assign({}, st)];
 }
 
 /* ================= действия ================= */
+function outName(list, ext, sheet){
+  const st = S();
+  if(doc === "cert"){
+    return st.mode === "batch"
+      ? `Сертификаты SmileClinic (${list.length}).${ext}`
+      : fileSafe(`Сертификат ${st.num||""} ${st.name||""}`.trim())+"."+ext;
+  }
+  if(sheet) return `Бейджи SmileClinic лист A4 (${list.length}).${ext}`;
+  return st.mode === "batch"
+    ? `Бейджи SmileClinic (${list.length}).${ext}`
+    : fileSafe(`Бейдж ${st.name||""}`.trim())+"."+ext;
+}
 async function downloadPdf(){
   const btn = $("btnPdf"), label = btn.textContent;
   btn.disabled = true; btn.textContent = "Готовлю PDF…";
   try{
-    const batch = S.mode === "batch" ? parseBatch() : null;
-    if(batch && !batch.length){ toast("Список пуст"); return; }
-    const list = batch ? batch : [Object.assign({}, S)];
-    const blob = await makePdf(list);
-    const name = batch
-      ? `Сертификаты SmileClinic (${list.length}).pdf`
-      : fileSafe(`Сертификат ${S.num||""} ${S.name||""}`.trim())+".pdf";
-    download(blob, name);
-    if(!batch && S.num && S.auto){ S.num = nextNumber(S.num); $("fNum").value = S.num; saveStore(); draw(); }
-    toast(batch ? `PDF на ${list.length} стр. скачан` : "PDF скачан");
+    const list = printList();
+    if(!list.length){ toast("Список пуст"); return; }
+    const st = S();
+    const sheet = doc === "badge" && st.sheet === "a4";
+    if(sheet){
+      const {blob, perPage} = await makeSheetPdf(list);
+      download(blob, outName(list,"pdf",true));
+      const pages = Math.ceil(list.length/perPage);
+      toast(`Лист A4: ${list.length} шт., ${pages} стр. (${perPage} на листе)`);
+    } else {
+      const blob = await makePdf(list);
+      download(blob, outName(list,"pdf",false));
+      if(doc==="cert" && st.mode!=="batch" && st.num && st.auto){
+        st.num = nextNumber(st.num); $("fNum").value = st.num; saveStore(); draw(); }
+      toast(list.length>1 ? `PDF на ${list.length} стр. скачан` : "PDF скачан");
+    }
   }catch(e){ console.error(e); toast("Ошибка: "+e.message); }
   finally{ btn.disabled = false; btn.textContent = label; }
 }
 function downloadPng(){
   draw();
-  cv.toBlob(b => download(b, fileSafe(`Сертификат ${S.num||""} ${S.name||""}`.trim())+".png"), "image/png");
-  toast("PNG 2160×3200 скачан");
-}
-function parseBatch(){
-  return String(S.batch||"").split("\n").map(l=>l.trim()).filter(Boolean)
-    .filter(l=>!/^(имя|name)\s*[;\t]/i.test(l))         // строка-заголовок из таблицы
-    .map(line=>{
-      const p = line.split(/[;\t]/).map(s=>s.trim());
-      return Object.assign({}, S, {name:p[0]||"", num:p[1]||"", val:p[2]||""});
-    });
-}
-function batchInfo(){
-  const el = $("batchInfo"); if(!el) return;
-  const n = parseBatch().length;
-  el.textContent = n ? `Будет ${n} ${n%10===1&&n%100!==11?"страница":(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?"страницы":"страниц")} в одном PDF.` : "";
+  const list = printList();
+  cv.toBlob(b => download(b, outName(list,"png",false)), "image/png");
+  toast(`PNG ${cv.width}×${cv.height} скачан`);
 }
 
-/* ================= привязка UI ================= */
-function markVal(){
-  const cur = String(S.val||"").replace(/\s/g,"");
-  document.querySelectorAll("[data-val]").forEach(b=>
-    b.classList.toggle("on", b.dataset.val === cur));
+/* ================= подсказки ================= */
+function batchInfo(){
+  const el = doc==="cert" ? $("batchInfo") : $("bBatchInfo");
+  if(!el) return;
+  const n = parseBatch().length;
+  const word = n%10===1&&n%100!==11 ? (doc==="cert"?"страница":"бейдж")
+    : (n%10>=2&&n%10<=4&&(n%100<10||n%100>=20) ? (doc==="cert"?"страницы":"бейджа")
+    : (doc==="cert"?"страниц":"бейджей"));
+  el.textContent = n ? (doc==="cert" ? `Будет ${n} ${word} в одном PDF.` : `Будет ${n} ${word}.`) : "";
+}
+function sizeInfo(){
+  const el = $("bSizeInfo"); if(!el) return;
+  const st = ST.badge;
+  const w = Number(st.width)||90, h = w*L_BADGE.H/L_BADGE.W;
+  const bw = mm(w), bh = mm(h), gap = mm(Number(st.gap)||0), margin = mm(10);
+  const cols = Math.max(1, Math.floor((mm(210)-2*margin+gap)/(bw+gap)));
+  const rows = Math.max(1, Math.floor((mm(297)-2*margin+gap)/(bh+gap)));
+  el.textContent = `Высота ${h.toFixed(1)} мм (пропорция макета). На листе ${cols}×${rows} = ${cols*rows} шт.`;
 }
 function nameWarn(){
   const el = $("nameWarn"); if(!el) return;
-  el.textContent = (S.name && !/\{имя\}/.test(S.body||""))
+  el.textContent = (ST.cert.name && !/\{имя\}/.test(ST.cert.body||""))
     ? "В тексте сертификата нет {имя} — имя не попадёт на макет." : "";
 }
-function bind(id, key, after){
+function markVal(){
+  const cur = String(ST.cert.val||"").replace(/\s/g,"");
+  document.querySelectorAll("[data-val]").forEach(b=>
+    b.classList.toggle("on", b.dataset.val === cur));
+}
+
+/* ================= привязка UI ================= */
+function bind(id, scope, key, after){
   const el = $(id);
-  el.value = S[key] || "";
-  const h = ()=>{ S[key] = el.value; saveStore(); draw(); if(after) after(); };
-  el.addEventListener("input", h);
+  el.value = ST[scope][key] != null ? ST[scope][key] : "";
+  el.addEventListener("input", ()=>{
+    ST[scope][key] = el.value; saveStore(); draw(); if(after) after();
+  });
+}
+function bindCheck(id, scope, key, after){
+  const el = $(id);
+  el.checked = !!ST[scope][key];
+  el.addEventListener("change", ()=>{
+    ST[scope][key] = el.checked; saveStore(); draw(); if(after) after();
+  });
+}
+function zoomDefault(){
+  const K = L();
+  const byH = (window.innerHeight-150)*K.W/K.H;
+  return Math.round(Math.min(K.W === 1034 ? 760 : 620, Math.max(300, byH)));
+}
+let pw = 405;
+function setZoom(v){
+  pw = Math.max(240, Math.min(1000, v));
+  document.documentElement.style.setProperty("--pw", pw+"px");
+}
+function switchDoc(next){
+  doc = next;
+  $("docCert").classList.toggle("on", doc==="cert");
+  $("docBadge").classList.toggle("on", doc==="badge");
+  $("rootCert").classList.toggle("hidden", doc!=="cert");
+  $("rootBadge").classList.toggle("hidden", doc!=="badge");
+  $("subTitle").textContent = doc==="cert"
+    ? "Генератор подарочных сертификатов" : "Генератор бейджей сотрудников";
+  syncCanvas(); syncButtons(); batchInfo(); saveStore(); draw();
+}
+function syncButtons(){
+  const st = S();
+  const sheet = doc==="badge" && st.sheet==="a4";
+  $("btnPdf").textContent = sheet ? "Скачать лист A4"
+    : (st.mode==="batch" ? "Скачать пакет PDF" : "Скачать PDF");
+  $("btnPng").classList.toggle("hidden", st.mode==="batch");   // PNG отдаёт только предпросмотр
 }
 function initUI(){
   loadStore();
-  bind("fName","name", nameWarn); bind("fNum","num"); bind("fVal","val", markVal); bind("fDate","date");
-  bind("fBody","body", nameWarn); bind("fH1","h1"); bind("fH2","h2"); bind("fC1","c1"); bind("fC2","c2");
-  bind("fPhone","phone"); bind("fBatch","batch", batchInfo);
+  /* --- сертификат --- */
+  bind("fName","cert","name", nameWarn); bind("fNum","cert","num");
+  bind("fVal","cert","val", markVal); bind("fDate","cert","date");
+  bind("fBody","cert","body", nameWarn); bind("fH1","cert","h1"); bind("fH2","cert","h2");
+  bind("fC1","cert","c1"); bind("fC2","cert","c2"); bind("fPhone","cert","phone");
+  bind("fBatch","cert","batch", batchInfo);
 
-  $("btnNext").onclick = ()=>{ S.num = nextNumber(S.num||"N000"); $("fNum").value = S.num; saveStore(); draw(); };
-  const auto = $("fAuto"); auto.checked = !!S.auto;
-  auto.onchange = ()=>{ S.auto = auto.checked; saveStore(); };
+  $("btnNext").onclick = ()=>{ ST.cert.num = nextNumber(ST.cert.num||"N000");
+    $("fNum").value = ST.cert.num; saveStore(); draw(); };
+  bindCheck("fAuto","cert","auto");
   document.querySelectorAll("[data-val]").forEach(b=> b.onclick = ()=>{
-    S.val = b.dataset.val; $("fVal").value = S.val; markVal(); draw(); });
+    ST.cert.val = b.dataset.val; $("fVal").value = ST.cert.val; markVal(); draw(); });
   markVal();
   document.querySelectorAll("[data-add]").forEach(b=> b.onclick = ()=>{
     const m = Number(b.dataset.add);
-    S.date = m ? plusMonths(m) : ""; $("fDate").value = S.date; saveStore(); draw(); });
+    ST.cert.date = m ? plusMonths(m) : ""; $("fDate").value = ST.cert.date; saveStore(); draw(); });
 
   $("tabOne").onclick = ()=>{ $("tabOne").classList.add("on"); $("tabBatch").classList.remove("on");
     $("paneOne").classList.remove("hidden"); $("paneBatch").classList.add("hidden");
-    $("btnPng").classList.remove("hidden");
-    S.mode = "one"; $("btnPdf").textContent = "Скачать PDF"; draw(); };
+    ST.cert.mode = "one"; syncButtons(); draw(); };
   $("tabBatch").onclick = ()=>{ $("tabBatch").classList.add("on"); $("tabOne").classList.remove("on");
     $("paneBatch").classList.remove("hidden"); $("paneOne").classList.add("hidden");
-    $("btnPng").classList.add("hidden");        // PNG отдаёт только текущий предпросмотр
-    S.mode = "batch"; $("btnPdf").textContent = "Скачать пакет PDF";
-    batchInfo(); draw(); $("fBatch").focus(); };
+    ST.cert.mode = "batch"; syncButtons(); batchInfo(); draw(); $("fBatch").focus(); };
 
-  const fontSel = $("fFont");
-  fontSel.value = S.font || "builtin";
-  $("fontUpload").classList.toggle("hidden", fontSel.value!=="custom");
-  fontSel.onchange = ()=>{ S.font = fontSel.value; saveStore();
-    $("fontUpload").classList.toggle("hidden", fontSel.value!=="custom");
-    if(fontSel.value==="builtin"){ fonts.reg=builtin("reg"); fonts.bold=builtin("bold");
-      fonts.custom=false; draw(); }
-  };
-  const fontState = ()=>{
-    const el = $("fontState");
-    const n = k => fonts[k].custom ? (fonts[k].fileName||"свой") : "встроенный Montserrat";
-    el.textContent = fonts.custom ? `Сейчас: обычный — ${n("reg")}, жирный — ${n("bold")}.` : "";
-  };
-  const hookFont = (id,kind)=> $(id).onchange = async ev=>{
-    const f = ev.target.files[0]; if(!f) return;
-    try{
-      await useCustomFont(kind, await f.arrayBuffer());
-      fonts[kind].fileName = f.name;
-      toast(f.name+" подключён"); fontState(); draw();
-    }catch(e){ toast("Шрифт не читается: "+f.name); }
-  };
-  hookFont("fFontReg","reg"); hookFont("fFontBold","bold");
-  if(S.font === "custom") $("fontState").textContent =
-    "Шрифт после перезагрузки не сохраняется — выбери файлы заново, иначе печатается встроенный Montserrat.";
+  /* --- бейдж --- */
+  bind("bName","badge","name"); bind("bRole","badge","role");
+  bind("bBatch","badge","batch", batchInfo);
+  bind("bWidth","badge","width", sizeInfo); bind("bGap","badge","gap", sizeInfo);
+  bindCheck("bMarks","badge","marks");
+  bindCheck("bUpper","badge","upper");
+  document.querySelectorAll("[data-role]").forEach(b=> b.onclick = ()=>{
+    ST.badge.role = b.dataset.role; $("bRole").value = ST.badge.role; saveStore(); draw(); });
 
-  const det = $("settings");
-  det.open = !!S.settingsOpen;
-  det.addEventListener("toggle", ()=>{ S.settingsOpen = det.open; saveStore(); });
+  const sheetSel = $("bSheet");
+  sheetSel.value = ST.badge.sheet || "single";
+  $("bSheetOpts").classList.toggle("hidden", sheetSel.value!=="a4");
+  sheetSel.onchange = ()=>{ ST.badge.sheet = sheetSel.value; saveStore();
+    $("bSheetOpts").classList.toggle("hidden", sheetSel.value!=="a4"); syncButtons(); sizeInfo(); };
 
+  $("bTabOne").onclick = ()=>{ $("bTabOne").classList.add("on"); $("bTabBatch").classList.remove("on");
+    $("bPaneOne").classList.remove("hidden"); $("bPaneBatch").classList.add("hidden");
+    ST.badge.mode = "one"; syncButtons(); draw(); };
+  $("bTabBatch").onclick = ()=>{ $("bTabBatch").classList.add("on"); $("bTabOne").classList.remove("on");
+    $("bPaneBatch").classList.remove("hidden"); $("bPaneOne").classList.add("hidden");
+    ST.badge.mode = "batch"; syncButtons(); batchInfo(); draw(); $("bBatch").focus(); };
+
+  /* --- шрифты обоих документов --- */
+  const hookFontUI = (scope, selId, wrapId, stateId, regId, boldId, note) => {
+    const sel = $(selId);
+    sel.value = ST[scope].font || "builtin";
+    $(wrapId).classList.toggle("hidden", sel.value!=="custom");
+    sel.onchange = ()=>{ ST[scope].font = sel.value; saveStore();
+      $(wrapId).classList.toggle("hidden", sel.value!=="custom"); draw(); };
+    const state = ()=>{
+      const el = $(stateId);
+      const n = k => CUSTOM[scope][k] ? (CUSTOM[scope][k].fileName||"свой") : "встроенный";
+      if(!(CUSTOM[scope].reg||CUSTOM[scope].bold)){ el.textContent = ""; return; }
+      el.textContent = scope === "cert"
+        ? `Сейчас: обычный — ${n("reg")}, жирный — ${n("bold")}.`
+        : `Сейчас печатаем: ${n("reg")}.`;
+    };
+    const hook = (id,kinds)=> $(id).onchange = async ev=>{
+      const f = ev.target.files[0]; if(!f) return;
+      const was = doc; doc = scope;                     // подключаем в шрифты этого документа
+      try{
+        const buf = await f.arrayBuffer();
+        for(const kind of kinds){
+          await useCustomFont(kind, buf);
+          CUSTOM[scope][kind].fileName = f.name;
+        }
+        toast(f.name+" подключён"); state();
+      }catch(e){ toast("Шрифт не читается: "+f.name); }
+      finally{ doc = was; draw(); }
+    };
+    if(boldId){ hook(regId,["reg"]); hook(boldId,["bold"]); }
+    else hook(regId,["reg","bold"]);                    // одна гарнитура на обе строки
+    if(ST[scope].font === "custom") $(stateId).textContent = note;
+  };
+  hookFontUI("cert","fFont","fontUpload","fontState","fFontReg","fFontBold",
+    "Шрифт после перезагрузки не сохраняется — выбери файлы заново, иначе печатается встроенный Montserrat.");
+  // у бейджа шрифт один — вшитый Gotham Pro Medium, выбирать нечего
+
+  /* --- раскрытые настройки, сброс --- */
+  [["settings","cert"],["bSettings","badge"]].forEach(([id,scope])=>{
+    const det = $(id);
+    det.open = !!ST[scope].settingsOpen;
+    det.addEventListener("toggle", ()=>{ ST[scope].settingsOpen = det.open; saveStore(); });
+  });
   $("btnReset").onclick = ()=>{
-    if(!confirm("Сбросить текст, подвал и номер к исходным значениям?")) return;
-    localStorage.removeItem(STORE); location.reload();
+    if(!confirm("Сбросить текст, подвал и номер сертификата к исходным значениям?")) return;
+    localStorage.removeItem(STORE_CERT); location.reload();
   };
+  $("bReset").onclick = ()=>{
+    if(!confirm("Сбросить настройки бейджей к исходным значениям?")) return;
+    localStorage.removeItem(STORE_BADGE); location.reload();
+  };
+
+  /* --- переключатель документа --- */
+  $("docCert").onclick = ()=>switchDoc("cert");
+  $("docBadge").onclick = ()=>switchDoc("badge");
+
+  /* --- восстановление вкладок --- */
+  if(ST.cert.mode === "batch") $("tabBatch").onclick();
+  if(ST.badge.mode === "batch") $("bTabBatch").onclick();
+
   $("btnPdf").onclick = downloadPdf;
   $("btnPng").onclick = downloadPng;
   document.addEventListener("keydown", e=>{
     if((e.metaKey||e.ctrlKey) && e.key==="Enter"){ e.preventDefault(); downloadPdf(); } });
 
-  // зум предпросмотра: по умолчанию — во всю высоту окна
-  let pw = Math.round(Math.min(620, Math.max(300, (window.innerHeight-150)*1080/1600)));
-  const setZoom = v => { pw = Math.max(240, Math.min(900, v));
-    document.documentElement.style.setProperty("--pw", pw+"px"); };
-  setZoom(pw);
   $("zIn").onclick = ()=>setZoom(pw+60); $("zOut").onclick = ()=>setZoom(pw-60);
+  sizeInfo(); nameWarn();
 }
 
 /* ================= старт ================= */
 (async function(){
-  const bar = document.createElement("div");
-  document.body.appendChild(bar);
   // кнопки действий (вне панели, чтобы были всегда видны)
   const act = document.createElement("div");
   act.className = "actions";
   act.innerHTML = '<button class="btn btn-gold" id="btnPdf">Скачать PDF</button>'+
                   '<button class="btn btn-ghost" id="btnPng">PNG</button>';
   document.querySelector(".app").appendChild(act);
-  bar.remove();
   initUI();
-  try{ await document.fonts.load("400 40px CertSans"); await document.fonts.load("700 41px CertSans"); }catch(e){}
+  switchDoc(doc);
+  try{
+    await document.fonts.load("400 40px CertSans"); await document.fonts.load("700 41px CertSans");
+    await document.fonts.load("500 52px BadgeSans"); await document.fonts.load("600 30px BadgeSans");
+  }catch(e){}
   draw();
-  $("fName").focus();
+  (doc==="cert" ? $("fName") : $("bName")).focus();
 })();
 </script>
 </body>

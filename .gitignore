@@ -1,4 +1,6 @@
 node_modules/
 *.pdf
 !src/template_clean.pdf
+!src/badge_template.pdf
+!src/badge_reference.pdf
 out*.png

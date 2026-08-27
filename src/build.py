@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Собирает однофайловый HTML-инструмент: вшивает pdf-lib, fontkit, шрифты, шаблон PDF и фон."""
+"""Собирает однофайловый HTML-инструмент: вшивает pdf-lib, fontkit, шрифты и оба макета (сертификат + бейдж)."""
 import base64, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +16,9 @@ repl = {
     "{{BG_B64}}":        b64("bg2x.png"),
     "{{FONT_REG_B64}}":  b64("M-Reg.ttf"),
     "{{FONT_BOLD_B64}}": b64("M-Bold.ttf"),
+    "{{FONT_GOTHAM_B64}}": b64("G-Med.otf"),
+    "{{BADGE_TPL_B64}}": b64("badge_template.pdf"),
+    "{{BADGE_BG_B64}}":  b64("badge_bg2x.png"),
 }
 out = tpl
 for k, v in repl.items():

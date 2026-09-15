@@ -117,6 +117,11 @@ canvas{display:block;width:var(--pw,405px);height:auto}
           <div class="hint">Поля ниже тоже можно оставлять пустыми: строка просто не печатается.</div>
           <div class="hint warn" id="nameWarn"></div>
         </div>
+        <div class="field">
+          <label for="fWish">Пожелание</label>
+          <textarea id="fWish" rows="2" placeholder="пусто"></textarea>
+          <div class="hint">Печатается жирным над основным текстом, текст уезжает ниже. Пусто — вёрстка как обычно. {имя} тоже работает.</div>
+        </div>
         <div class="row">
           <div class="field">
             <label for="fNum">Номер</label>
@@ -150,8 +155,8 @@ canvas{display:block;width:var(--pw,405px);height:auto}
       <div id="paneBatch" class="hidden">
         <div class="field">
           <label for="fBatch">Список сертификатов</label>
-          <textarea id="fBatch" rows="9" placeholder="имя; номер; номинал&#10;имя; номер; номинал"></textarea>
-          <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
+          <textarea id="fBatch" rows="9" placeholder="имя; номер; номинал&#10;имя; номер; номинал; пожелание"></textarea>
+          <div class="hint">Строка = сертификат: <b>имя; номер; номинал</b>, четвёртой колонкой можно добавить <b>пожелание</b>. Разделитель — точка с запятой или табуляция, так что можно вставить прямо из таблицы. Срок действия и подвал берутся из настроек ниже. На выходе — один PDF, каждый сертификат отдельной страницей.</div>
           <div class="hint" id="batchInfo"></div>
         </div>
       </div>
@@ -301,6 +306,11 @@ const L_CERT = {
   bg:{r:28/255,g:28/255,b:26/255},           // цвет фона макета
   cover:{y0:520, y1:1425},                    // зона, которую перерисовываем
   body:{size:40, lh:58, track:-0.2, centerY:703, maxW:900, minSize:26, top:534, bottom:876},
+  /* пожелание над текстом — по макету «_Сертификат.pdf»: Montserrat Bold 40, база 616,
+     текст начинается через две строки (база 732). Блок идёт сверху вниз; если с номером
+     и номиналом не влезает до last, сначала сжимаются зазоры до min, потом кегль текста. */
+  wish:{size:40, lh:52, track:0, y:616, maxW:900, gap:116, gapMin:80,
+        accGap:137.75, accGapMin:100, last:1045},
   accent:{size:41, track:0.5, y1:927.75, y2:985.75, ySolo:956.75},
   srok:{size:25, track:0.12, y:1119.5},
   divider:{x0:182, x1:896, y:1150, h:1},
@@ -331,7 +341,7 @@ const DEFAULTS_CERT = {
   h1:"Мы работаем ежедневно", h2:"с 9:00 до 21:00",
   c1:"Чтобы воспользоваться сертификатом,", c2:"запишитесь на прием по телефону",
   phone:"+7 (812) 241 12 88", date:"", font:"builtin",
-  name:"", num:"", val:"", batch:"", mode:"one"
+  name:"", wish:"", num:"", val:"", batch:"", mode:"one"
 };
 const DEFAULTS_BADGE = {
   name:"", role:"", batch:"", mode:"one", font:"builtin",
@@ -516,29 +526,65 @@ function buildCertOps(data){
   const ops = [];
   ops.push({t:"rect", x:0, y:K.cover.y0, w:K.W, h:K.cover.y1-K.cover.y0, fill:K.bg});
 
-  // основной текст: подбор кегля
-  let size = K.body.size, lh = K.body.lh, lines = [];
-  const avail = K.body.bottom - K.body.top;
-  for(;;){
-    lines = wrap(bodyText(data.body, data.name), size, trackOf(K.body.track), K.body.maxW*size/K.body.size);
-    const h = (lines.length-1)*lh + size*0.9;
-    if(h <= avail || size <= K.body.minSize) break;
-    size -= 1; lh = Math.round(size*1.45);
-  }
-  const first = K.body.centerY - (lines.length-1)*lh/2;
-  lines.forEach((ln,i)=>{ if(ln) ops.push({t:"text", s:ln, size, kind:"reg",
-    track:trackOf(K.body.track), y:first+i*lh}); });
-
   // номер / номинал
   const numLine = data.num ? "Номер сертификата: "+data.num : "";
   const valLine = data.val ? "Номинал: "+money(data.val) : "";
   const pair = [numLine, valLine].filter(Boolean);
-  if(pair.length===2){
-    ops.push({t:"text", s:numLine, size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.y1});
-    ops.push({t:"text", s:valLine, size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.y2});
-  } else if(pair.length===1){
-    ops.push({t:"text", s:pair[0], size:K.accent.size, kind:"bold", track:trackOf(K.accent.track), y:K.accent.ySolo});
+  const accentAt = ys => pair.forEach((s,i)=> ops.push({t:"text", s, size:K.accent.size, kind:"bold",
+    track:trackOf(K.accent.track), y:ys[i]}));
+
+  const wish = bodyText(data.wish, data.name).trim();
+  const bodyLines = size => wrap(bodyText(data.body, data.name), size, trackOf(K.body.track), K.body.maxW*size/K.body.size);
+  const pushBody = (lines, size, first, lh) => lines.forEach((ln,i)=>{ if(ln) ops.push({t:"text", s:ln, size,
+    kind:"reg", track:trackOf(K.body.track), y:first+i*lh}); });
+
+  if(!wish){
+    // основной текст: подбор кегля
+    let size = K.body.size, lh = K.body.lh, lines = [];
+    const avail = K.body.bottom - K.body.top;
+    for(;;){
+      lines = bodyLines(size);
+      const h = (lines.length-1)*lh + size*0.9;
+      if(h <= avail || size <= K.body.minSize) break;
+      size -= 1; lh = Math.round(size*1.45);
+    }
+    pushBody(lines, size, K.body.centerY - (lines.length-1)*lh/2, lh);
+    accentAt(pair.length===2 ? [K.accent.y1, K.accent.y2] : [K.accent.ySolo]);
+    return finishCertOps(ops, data);
   }
+
+  // пожелание сверху, под ним текст, под ним номер и номинал — одной колонкой
+  const W = K.wish;
+  const accH = pair.length ? (pair.length-1)*(K.accent.y2-K.accent.y1) : 0;
+  // масштаб s ужимает пожелание, текст и зазоры вместе, чтобы не ломалась иерархия
+  let s = 1, wSize, wLh, wLines, wishEnd, size, lh, lines, g1, g2;
+  for(;;){
+    wSize = Math.round(W.size*s); wLh = Math.round(W.lh*s);
+    wLines = wrap(wish, wSize, trackOf(W.track), W.maxW, "bold").filter(Boolean);
+    wishEnd = W.y + (wLines.length-1)*wLh;
+    size = Math.round(K.body.size*s); lh = s === 1 ? K.body.lh : Math.round(size*1.45);
+    lines = bodyLines(size);
+    g1 = W.gap*s; g2 = pair.length ? W.accGap*s : 0;
+    const m1 = W.gapMin*s, m2 = pair.length ? W.accGapMin*s : 0;
+    const over = wishEnd + g1 + (lines.length-1)*lh + g2 + accH - W.last;
+    if(over <= 0) break;
+    const slack = (g1-m1) + (g2-m2);
+    if(over <= slack || size <= K.body.minSize){
+      const k = Math.min(1, over/slack);
+      g1 -= (g1-m1)*k; g2 -= (g2-m2)*k;
+      break;
+    }
+    s -= 0.025;
+  }
+  wLines.forEach((ln,i)=> ops.push({t:"text", s:ln, size:wSize, kind:"bold", track:trackOf(W.track), y:W.y+i*wLh}));
+  const first = wishEnd + g1;
+  pushBody(lines, size, first, lh);
+  const acc1 = first + (lines.length-1)*lh + g2;
+  accentAt([acc1, acc1 + accH]);
+  return finishCertOps(ops, data);
+}
+function finishCertOps(ops, data){
+  const K = L_CERT;
 
   // срок действия
   if(data.date) ops.push({t:"text", s:"Срок действия сертификата до "+data.date,
@@ -775,7 +821,7 @@ function parseBatch(){
     .map(line=>{
       const p = line.split(/[;\t]/).map(s=>s.trim());
       return doc === "cert"
-        ? Object.assign({}, st, {name:p[0]||"", num:p[1]||"", val:p[2]||""})
+        ? Object.assign({}, st, {name:p[0]||"", num:p[1]||"", val:p[2]||"", wish:p[3]||""})
         : Object.assign({}, st, {name:p[0]||"", role:p[1]||st.role||""});
     });
 }
@@ -849,7 +895,7 @@ function sizeInfo(){
 }
 function nameWarn(){
   const el = $("nameWarn"); if(!el) return;
-  el.textContent = (ST.cert.name && !/\{имя\}/.test(ST.cert.body||""))
+  el.textContent = (ST.cert.name && !/\{имя\}/.test((ST.cert.body||"")+(ST.cert.wish||"")))
     ? "В тексте сертификата нет {имя} — имя не попадёт на макет." : "";
 }
 function markVal(){
@@ -903,7 +949,7 @@ function syncButtons(){
 function initUI(){
   loadStore();
   /* --- сертификат --- */
-  bind("fName","cert","name", nameWarn); bind("fNum","cert","num");
+  bind("fName","cert","name", nameWarn); bind("fWish","cert","wish", nameWarn); bind("fNum","cert","num");
   bind("fVal","cert","val", markVal); bind("fDate","cert","date");
   bind("fBody","cert","body", nameWarn); bind("fH1","cert","h1"); bind("fH2","cert","h2");
   bind("fC1","cert","c1"); bind("fC2","cert","c2"); bind("fPhone","cert","phone");

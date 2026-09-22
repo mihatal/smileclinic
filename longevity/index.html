@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лонживити — линейка продуктов и карта рынка</title>
+<style>
+:root{--white:#FFFFFF;--ink:#1A1919;--bronze:#83754E;--gold:#B79E5F;--bronze-dark:#6F6342;
+  --gray:#747474;--bg:#FAFAFA;--line:#E8E8E8;--dark2:#2F2F2F}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--white);color:var(--ink);
+  font-family:'Gotham Pro','Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:16px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+h1,h2,h3{font-weight:500;letter-spacing:-.01em;margin:0}
+h1{font-size:34px;line-height:1.2}
+h2{font-size:24px;line-height:1.25;margin:0 0 6px}
+h3{font-size:17px;margin:0 0 8px}
+p{margin:0 0 14px}
+.mono{font-variant-numeric:tabular-nums}
+header{border-bottom:1px solid var(--line);padding:38px 0 30px}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);margin-bottom:14px}
+.lede{color:var(--gray);font-size:15px;margin-top:12px;max-width:820px}
+nav.toc{border-bottom:1px solid var(--line);padding:14px 0;background:var(--bg);position:sticky;top:0;z-index:10}
+nav.toc .wrap{display:flex;flex-wrap:wrap;gap:18px;font-size:13px}
+nav.toc a{border:none;color:var(--gray);text-decoration:none}
+nav.toc a:hover{color:var(--bronze)}
+section{padding:44px 0;border-bottom:1px solid var(--line)}
+.snum{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--bronze);margin-bottom:16px}
+.sub{color:var(--gray);font-size:15px;max-width:820px;margin:-2px 0 22px}
+.rule{border-left:2px solid var(--bronze);padding:14px 0 14px 18px;margin:22px 0 0;background:var(--bg);font-size:14.5px}
+.rule b{font-weight:500}
+.note{font-size:13px;color:var(--gray);margin-top:12px;line-height:1.5}
+
+/* линейка */
+.line{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:8px}
+.item{background:var(--white);display:grid;grid-template-columns:250px 190px 1fr}
+.item>div{padding:22px 20px}
+.item .nm .step{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);margin-bottom:8px}
+.item .nm .n{font-size:22px;font-weight:500;line-height:1.2}
+.item .nm .sub2{font-size:13px;color:var(--gray);margin-top:8px;line-height:1.45}
+.item .pr{border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.item .pr .p{font-size:21px;font-weight:500;white-space:nowrap;line-height:1.2;letter-spacing:-.01em}
+.item .pr .per{font-size:12.5px;color:var(--gray);margin-top:4px}
+.item .pr .after{font-size:12.5px;color:var(--bronze);margin-top:14px;line-height:1.45;padding-top:12px;border-top:1px solid var(--line)}
+.utp{font-size:15px;line-height:1.5;margin-bottom:10px}
+.utp b{font-weight:500}
+.tag{display:inline-block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--line);color:var(--gray);margin-top:10px}
+.tag.ok{border-color:var(--bronze);color:var(--bronze)}
+.tag.pencil{border-color:#C8B27A;color:#9A803F;background:#FCF8EE}
+
+/* карточки наполнения */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:10px}
+.card{background:var(--white);padding:26px 24px}
+.card.dark{background:var(--ink);color:var(--white)}
+.card .role{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bronze);margin-bottom:10px}
+.card.dark .role{color:var(--gold)}
+.card .nm{font-size:22px;font-weight:500;line-height:1.2}
+.card .desc{font-size:13px;color:var(--gray);margin-top:6px;line-height:1.45}
+.card.dark .desc{color:#B4AFA2}
+.card .num{font-size:34px;font-weight:500;letter-spacing:-.02em;margin:14px 0 2px}
+.card .numsub{font-size:12.5px;color:var(--gray)}
+.card.dark .numsub{color:#B4AFA2}
+.card h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);font-weight:500;margin:22px 0 10px}
+.card.dark h4{color:var(--gold)}
+ul.in{list-style:none;margin:0;padding:0}
+ul.in li{position:relative;padding-left:18px;font-size:13.5px;margin-bottom:8px;line-height:1.45;color:var(--ink)}
+.card.dark ul.in li{color:#E4E1DA}
+ul.in li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--bronze)}
+.card.dark ul.in li:before{background:var(--gold)}
+ul.out li{color:var(--gray)}
+ul.out li:before{background:var(--line);height:1px;width:9px;top:10px}
+.card.dark ul.out li{color:#9C978C}
+
+/* таблицы */
+table.nb{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
+table.nb th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bronze);padding:0 14px 10px 0;border-bottom:1px solid var(--line)}
+table.nb td{padding:12px 14px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.45}
+table.nb tr:last-child td{border-bottom:none}
+table.nb td.price,table.nb td.delta{white-space:nowrap;font-variant-numeric:tabular-nums}
+table.nb td.delta{color:var(--bronze)}
+table.nb td.miss{color:var(--gray);font-size:13.5px}
+table.nb tr.us td{background:var(--bg);font-weight:500}
+.yes{color:var(--bronze)}
+.no{color:#C4C0B7}
+
+/* факты */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:6px}
+.fact{background:var(--white);padding:22px}
+.fact .n{font-size:30px;font-weight:500;letter-spacing:-.02em;color:var(--bronze);line-height:1.1}
+.fact .t{font-size:14px;margin-top:8px;line-height:1.45}
+.fact .s{font-size:12.5px;color:var(--gray);margin-top:7px;line-height:1.45}
+
+/* графики */
+.chart,.chart2,.chart3{margin-top:18px}
+.bar-row,.b2-row,.b3-row{display:flex;align-items:center;gap:12px;margin-bottom:7px;font-size:13px}
+.lab{width:86px;color:var(--gray);flex:none;font-variant-numeric:tabular-nums}
+.lab2{width:250px;color:var(--gray);flex:none;line-height:1.3}
+.bar-track{flex:1;height:20px;background:var(--bg);position:relative;border-radius:1px}
+.bar-fill{height:100%;background:var(--line);border-radius:1px}
+.bar-row.us .bar-fill,.b2-row.us .bar-fill{background:var(--bronze)}
+.bar-row.us .lab,.b2-row.us .lab2{color:var(--ink);font-weight:500}
+.cnt{width:36px;text-align:right;color:var(--gray);flex:none;font-variant-numeric:tabular-nums}
+.cnt2{width:150px;text-align:right;color:var(--gray);flex:none;font-variant-numeric:tabular-nums}
+.cnt2 .m{color:#A8A399}
+.us-tag{position:absolute;top:-1px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--bronze);white-space:nowrap;padding-left:10px;line-height:22px}
+.chart-note{font-size:12.5px;color:var(--gray);margin-top:14px;line-height:1.5;max-width:840px}
+/* range-график */
+.b3-row{margin-bottom:10px}
+.range-track{flex:1;height:24px;position:relative;background:linear-gradient(to right,var(--bg),var(--bg));border-radius:1px}
+.range-fill{position:absolute;top:4px;height:16px;background:var(--line);border-radius:1px}
+.b3-row.us .range-fill{background:var(--bronze)}
+.b3-row.us .lab2{color:var(--ink);font-weight:500}
+.axis{position:relative;height:16px;margin:8px 150px 0 262px;font-size:11px;color:#A8A399}
+.axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.dot{position:absolute;top:6px;width:12px;height:12px;border-radius:50%;background:var(--line);transform:translateX(-6px)}
+.b3-row.us .dot{background:var(--bronze)}
+
+/* сервис-карта */
+table.sv{width:100%;border-collapse:collapse;margin-top:14px;font-size:13.5px}
+table.sv th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bronze);padding:0 14px 10px 0;border-bottom:1px solid var(--line)}
+table.sv td{padding:11px 14px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.4}
+table.sv td:first-child{font-weight:500;width:230px}
+table.sv tr:last-child td{border-bottom:none}
+
+/* открытые вопросы */
+.open{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:10px}
+.q{background:var(--white);padding:20px 22px}
+.q .h{font-size:15px;font-weight:500;margin-bottom:7px}
+.q .b{font-size:13.5px;color:var(--gray);line-height:1.45}
+.q .who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze);margin-top:12px}
+
+footer{padding:30px 0 60px;font-size:12.5px;color:var(--gray);line-height:1.6}
+@media(max-width:900px){
+  .item{grid-template-columns:1fr}
+  .item .pr{border-left:none;border-right:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .cards,.open,.facts{grid-template-columns:1fr}
+  .lab2{width:140px}
+  .cnt2{width:110px}
+  .axis{margin:8px 110px 0 152px}
+  nav.toc{position:static}
+}
+</style></head>
+<body>
+
+<header><div class="wrap">
+  <div class="eyebrow">SmileClinic · персональная медицина · внутренний свод</div>
+  <h1>Линейка направления: названия, наполнение, место на рынке</h1>
+  <div class="lede">Сведено из всех сессий по направлению: драфт тарифов от 13 мая, встреча с Никитой 25 августа, конкурентная разведка Петербурга 31 августа (104 продукта в 40 организациях), PJM-встреча 3 сентября, отчёт о цене входных продуктов 7 сентября, проверка названий по Вордстату 15 сентября. Дата свода — 22 сентября 2026.</div>
+</div></header>
+
+<nav class="toc"><div class="wrap">
+  <a href="#s1">01 Линейка</a>
+  <a href="#s2">02 Наполнение</a>
+  <a href="#s3">03 Цены и сроки</a>
+  <a href="#s4">04 Сервис-карта</a>
+  <a href="#s5">05 Где мы по рынку</a>
+  <a href="#s6">06 Соседи</a>
+  <a href="#s7">07 Экономика</a>
+  <a href="#s8">08 Кому продаём</a>
+  <a href="#s9">09 Что решить</a>
+</div></nav>
+
+<section id="s1"><div class="wrap">
+  <div class="snum">01 · Линейка</div>
+  <h2>Четыре продукта на 22 сентября</h2>
+  <div class="sub">Два слоя названия. <b>Имя</b> — то, что говорит администратор в трубку и что стоит в прайсе и CRM. <b>Дескриптор</b> — то, что стоит на сайте, в КП и в рекламе. Разные задачи, разная длина.</div>
+
+  <div class="line">
+    <div class="item">
+      <div class="nm">
+        <div class="step">Ступень 1 · разовая</div>
+        <div class="n">Анализ крови</div>
+        <div class="sub2">Дескриптор: «Исчерпывающий анализ крови с расшифровкой результатов»</div>
+        <div class="tag ok">Имя рабочее</div>
+      </div>
+      <div class="pr">
+        <div class="p">14 900 ₽</div>
+        <div class="per">разовая услуга</div>
+        <div class="after">Засчитывается в чекап при покупке в 30 дней. Доплата 35 000 ₽</div>
+      </div>
+      <div>
+        <div class="utp">Лаборатория отдаёт бланк с цифрами. <b>Мы отдаём документ, который человек понимает без гугла.</b></div>
+        <ul class="in">
+          <li>«Анализ крови» ищут <b>106 619 раз в месяц</b> по Петербургу — имя и есть поисковый запрос</li>
+          <li>«Что означают анализы» и «расшифровка анализов» — ещё <b>8 200 запросов</b>, а саму услугу с расшифровкой ищут 97 раз: спрос есть, предложения нет</li>
+          <li>Ни одна из шести лабораторий города не даёт ApoB, Lp(a), инсулин, hsCRP, тестостерон, гомоцистеин и B12 <b>в одном заказе</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="nm">
+        <div class="step">Ступень 2 · основной вход</div>
+        <div class="n">Чекап</div>
+        <div class="sub2">Дескриптор: «Комплексный чекап и план улучшения показателей»</div>
+        <div class="tag ok">Имя рабочее</div>
+      </div>
+      <div class="pr">
+        <div class="p">49 900 ₽</div>
+        <div class="per">разовая услуга</div>
+        <div class="after">Засчитывается полностью в любую программу при покупке в 30 дней</div>
+      </div>
+      <div>
+        <div class="utp">Человек уходит не с папкой анализов, а с картиной: <b>где он сейчас, к чему это ведёт и на что можно повлиять.</b></div>
+        <ul class="in">
+          <li>Ни один чекап Петербурга не собирает VO2 Max, силу хвата, состав тела, биовозраст и когнитивный тест <b>вместе</b></li>
+          <li>Разбор результатов живым врачом дают <b>7 организаций из 40</b>, план улучшения показателей — <b>ни один</b> клинический чекап города</li>
+          <li>Собрать тот же набор по частям — <b>62 100 ₽</b> и шесть визитов в шесть разных мест</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="nm">
+        <div class="step">Ступень 3 · подписка</div>
+        <div class="n">Личный врач</div>
+        <div class="sub2">Дескриптор: «Сопровождение личного врача»</div>
+        <div class="tag pencil">Карандашом</div>
+      </div>
+      <div class="pr">
+        <div class="p">от 25 000 ₽</div>
+        <div class="per">в месяц при оплате за год</div>
+        <div class="after">35 000 ₽/мес помесячно · 90 000 ₽ за 3 мес · 162 000 ₽ за 6 мес · 300 000 ₽ за год</div>
+      </div>
+      <div>
+        <div class="utp">У человека появляется <b>свой врач</b>, который знает его показатели и отвечает за то, куда они движутся. Через три месяца — повторный замер и новые цифры.</div>
+        <ul class="in">
+          <li>Рынок даёт либо консультацию за <b>4 000–11 600 ₽</b> без диагностики, либо программу от <b>63 350 ₽</b>. Промежутка «измерили, изменили, измерили снова» нет ни у кого</li>
+          <li>«Личный врач» — <b>1 731 запрос</b> в месяц, в 31 раз сильнее «персонального врача»</li>
+          <li>Связь идёт через админ-аккаунт клиники, личного координатора нет</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="nm">
+        <div class="step">Ступень 4 · подписка · флагман</div>
+        <div class="n">Личная команда</div>
+        <div class="sub2">Дескриптор: «Сопровождение личной команды»</div>
+        <div class="tag pencil">Карандашом</div>
+      </div>
+      <div class="pr">
+        <div class="p">от 41 700 ₽</div>
+        <div class="per">в месяц при оплате за год</div>
+        <div class="after">60 000 ₽/мес помесячно · 165 000 ₽ за 3 мес · 300 000 ₽ за 6 мес · 500 000 ₽ за год</div>
+      </div>
+      <div>
+        <div class="utp">Тот же врач и та же медицина, но <b>заниматься организацией не нужно</b>: координатор держит расписание, напоминает, заказывает, решает бытовые вопросы.</div>
+        <ul class="in">
+          <li>Единственное реальное отличие от «Личного врача» — <b>личный координатор-куратор</b> вместо админ-аккаунта. Это и продаём, а не количество процедур</li>
+          <li>Российский средний премиум занят: Atlas «Врач в друзьях» <b>200–400 тыс ₽/год</b>, клубные карты Bioniq <b>150–300 тыс ₽/год</b> — подписка на доступ к врачу без диагностики нашей глубины</li>
+          <li>Помесячная оплата дороже годовой <b>на 31%</b> — встроенный стимул брать длинный срок</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule">
+    <b>Статус названий.</b> Нижние две ступени работают: смысл заложен внутрь имени, объяснять не нужно, и поиск их подтверждает. Названия двух тарифов зафиксированы карандашом — на сессии 15 сентября решили, что они должны описывать не состав («кто с вами»), а ответственность («что клиника забирает на себя»): тариф 1 — ответственность за корректировки плана, тариф 2 — вся ответственность. Ветку выбирает Миша, формулировки после этого доводятся.
+    <br><br>
+    <b>Зонтик направлению не нужен.</b> Оно живёт под дескриптором клиники <b>«ПЕРСОНАЛЬНАЯ МЕДИЦИНА»</b> из документа о расширении от 1 сентября. Слово «долголетие» в Петербурге занято и обесценено до 19 900 ₽ — в вывеску его не ставим.
+    <br><br>
+    <b>Чего в названиях нет и не будет.</b> Ни одного обещания медицинского результата («минус пять лет», «омоложение»), ни уровневых слов («базовый», «премиум»), ни англицизмов («CORE», «лонживити»), ни срока в имени — срок это параметр покупки, оба тарифа продаются помесячно, на 3, 6 и 12 месяцев.
+  </div>
+</div></section>
+
+<section id="s2"><div class="wrap">
+  <div class="snum">02 · Наполнение</div>
+  <h2>Что человек получает за свои деньги</h2>
+  <div class="sub">Состав собран из драфта тарифов 13 мая, решений встречи с Никитой 25 августа и карты пути пациента от 3 сентября.</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="role">Ступень 1 · 14 900 ₽</div>
+      <div class="nm">Анализ крови</div>
+      <div class="desc">Разовая услуга. Без очной встречи с врачом — отчёт и есть продукт</div>
+      <h4>Входит</h4>
+      <ul class="in">
+        <li><b>40 маркеров:</b> липиды с ApoB и Lp(a), гликированный гемоглобин, инсулин, индекс HOMA-IR, hsCRP, печень, почки, щитовидная железа, половые гормоны, витамины, ферритин, гомоцистеин, B12</li>
+        <li><b>Автоматический отчёт</b> с базовыми рекомендациями: что в норме, что просело, к какому специалисту идти при отклонении</li>
+        <li><b>Кабинет пациента</b> — его получают все, включая эту ступень: отчёт генерируется автоматически</li>
+      </ul>
+      <h4>Не входит</h4>
+      <ul class="in out">
+        <li>Очная встреча и устная расшифровка</li>
+        <li>План улучшения показателей</li>
+        <li>Повторные замеры</li>
+        <li>Препараты и пептиды в рекомендациях</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="role">Ступень 2 · 49 900 ₽</div>
+      <div class="nm">Чекап</div>
+      <div class="desc">Один визит на измерения, через неделю — час с врачом</div>
+      <h4>Входит</h4>
+      <ul class="in">
+        <li><b>Та же панель крови</b> плюс специфика под запрос</li>
+        <li><b>Состав тела</b> — импеданс на TechnoGym, <b>сила хвата</b> встроена в тот же замер</li>
+        <li><b>VO2 Max</b> — функциональный тест выносливости</li>
+        <li><b>Когнитивный тест Cognifit</b> — глубже встроенного в TechnoGym</li>
+        <li><b>Биологический возраст</b> и полная антропометрия</li>
+        <li><b>Одна анкета:</b> анамнез, цели, образ жизни, история семьи и отдельный блок эмоционального здоровья</li>
+        <li><b>Час с врачом:</b> где вы сейчас, к чему это ведёт, на какие показатели можно повлиять — и план</li>
+      </ul>
+      <h4>Не входит</h4>
+      <ul class="in out">
+        <li>УЗИ, эндоскопия, МРТ — их у нас нет вообще</li>
+        <li>Генетика и эпигенетика — отдельные апселлы</li>
+      </ul>
+      <div class="note">Порядок визита по карте пути пациента: пациента из холла забирает <b>врач</b>, а не медсестра, и по дороге даёт двухминутный рассказ о направлении. Измерения идут в порядке состав тела → когнитив → кровь последней. Фотопротокол только после оплаты. Старт лечения — отдельный третий визит.</div>
+    </div>
+
+    <div class="card">
+      <div class="role">Ступень 3 · от 25 000 ₽/мес</div>
+      <div class="nm">Личный врач</div>
+      <div class="desc">Для скептика, который хочет проверить инструмент на себе, прежде чем брать полное сопровождение</div>
+      <h4>Входит</h4>
+      <ul class="in">
+        <li><b>Вход через чекап</b> — его стоимость засчитывается в программу</li>
+        <li><b>Протокол под профиль</b> с коррекцией по контрольным точкам</li>
+        <li><b>Питание:</b> три готовых сценария рациона — веганский, мясоедский, сбалансированный</li>
+        <li><b>Спорт:</b> три плана тренировок (новички / обычные / сильные) и одна обучающая тренировка с тренером-партнёром</li>
+        <li><b>Врач:</b> встречи на старте, в середине и в финале цикла</li>
+        <li><b>Датчик постоянного мониторинга глюкозы</b> на две недели вместо повторной сдачи крови</li>
+        <li><b>Замеры TechnoGym</b> на старте, в середине и в конце; через три месяца — повторный замер тех же показателей</li>
+        <li><b>Добавки:</b> подбираем и присылаем ссылки, аптечные отдаём как часть услуги</li>
+        <li><b>Связь</b> через админ-аккаунт клиники в рабочее время: маленький пакет ведёт админ, большой — координатор</li>
+        <li><b>Личный кабинет</b> с отчётами и динамикой показателей — он есть у пациента любой ступени</li>
+        <li><b>Браслет от клиники</b> — сон, пульс покоя, вариабельность ритма и нагрузка идут врачу непрерывным потоком, он смотрит динамику по всем пациентам ежедневно. Техника одна во всех тарифах</li>
+        <li><b>Аптечные препараты и БАДы</b> отдаём как часть услуги; неаптечные в руки не передаём</li>
+        <li><b>Следующий приём назначается до ухода</b> — без этого пациента не отпускаем</li>
+        <li><b>Оплата:</b> помесячно или за полгода; банковскую рассрочку на годовую сумму не даём — переплата выходит дороже помесячной</li>
+      </ul>
+      <h4>Не входит</h4>
+      <ul class="in out">
+        <li>Личный координатор-куратор</li>
+        <li>Кастомный рацион под привычки и разбор меню по фото</li>
+        <li>Онлайн-сопровождение тренером</li>
+        <li>Лекции Склярова, мероприятия, партнёрские скидки</li>
+        <li>Подписка на браслет и на приложения — оплачивается отдельно</li>
+        <li>Welcome-pack</li>
+      </ul>
+    </div>
+
+    <div class="card dark">
+      <div class="role">Ступень 4 · от 41 700 ₽/мес · флагман</div>
+      <div class="nm">Личная команда</div>
+      <div class="desc">«Вам не нужно об этом думать. За вашими показателями следит команда»</div>
+      <h4>Всё из «Личного врача», плюс</h4>
+      <ul class="in">
+        <li><b>Личный координатор-куратор</b> — основной контакт: записывает на приёмы, организует доставку, решает бытовые вопросы, напрямую на связи с врачом</li>
+        <li><b>ИИ-агент для меню по фото</b> — фото меню в ресторане, в ответ рекомендации под калории и макросы</li>
+        <li><b>Питание:</b> кастомный план под привычки, сверки блюд по фото с нутрициологом</li>
+        <li><b>Спорт:</b> индивидуальная программа, онлайн-разбор техники тренером, одна офлайн-тренировка в месяц. Тренер пишет сам, если человек пропускает</li>
+        <li><b>Врач каждые 2–4 недели</b> — 8–10 встреч за программу</li>
+        <li><b>Контроль:</b> повторные сдачи крови по плану и ежемесячный замер состава тела</li>
+        <li><b>Добавки заказываем за клиента</b> и организуем доставку: считаем запас (банка 60 капсул — 60 дней), на 45-й день задача в CRM и координатор согласует новую поставку</li>
+        <li><b>Зарубежные приложения</b> — устанавливаем и настраиваем; оплату подписок гифт-картами за клиента обсуждаем отдельно</li>
+        <li><b>Илья Скляров</b> — вступительный блок на презентации результатов первые месяц-два; <b>библиотека его лекций</b> — сон, питание, спорт, восстановление — задел на потом</li>
+        <li><b>Мероприятия клиники</b> — закрытые для участников программы плюс открытые маркетинговые</li>
+        <li><b>Совместные события</b> — спортивные выходы и мастер-классы по готовке для участников программы</li>
+        <li><b>Карта партнёрских скидок:</b> кардиоклиника, лаборатории, фитнес, бьюти, рестораны здорового питания</li>
+        <li><b>Семейный апгрейд −15%</b> на программу второго и далее плюс общий координатор; <b>корпоративный −20%</b> на каждого</li>
+        <li><b>Welcome-pack</b> — фирменный мерч-набор на входе</li>
+        <li><b>Вау-моменты</b> — минимум два незапланированных жеста заботы за программу: ритуал празднования результата, аварийный набор на срыве, подача плохих результатов отдельным сценарием</li>
+        <li><b>Ретейнер:</b> после активной фазы поддерживающий режим и регулярный чекин, программа не заканчивается</li>
+      </ul>
+      <h4>Не входит</h4>
+      <ul class="in out">
+        <li>Консьерж 24/7 — его закрывают ИИ-агент и куратор в рабочее время</li>
+        <li>Эпигенетика, генетика, МРТ — отдельные апселлы</li>
+        <li>ГЗТ как параллельный протокол — только по показанию и отдельно</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rule">
+    <b>Снято 22 сентября: групповая терапия.</b> В драфте 13 мая общий чат участников на 10–15 человек с модерацией стоял обязательным элементом обоих тарифов. Решением Миши формат снят — в составе программ его нет. Совместные события во флагмане остаются, но это мероприятия, а не групповая терапия.
+    <br><br>
+    <b>Противоречие, не снятое до сих пор: пептиды.</b> Драфт тарифов 13 мая — «пептиды НЕ входят в стоимость программы, оплачиваются отдельно, около 12 000 ₽ в месяц». Встреча с Никитой 25 августа — «пептиды не продаём, входят в услугу». Карта пути пациента 3 сентября снова записала «пептиды и БАДы не входят в цену пакета». Цена вопроса — <b>144 000 ₽ в год с пациента, это 29% годовой «Личной команды»</b>. Пока не записано одним предложением, прибыль флагмана посчитать нельзя.
+  </div>
+</div></section>
+
+<section id="s3"><div class="wrap">
+  <div class="snum">03 · Цены и сроки</div>
+  <h2>Ценовая сетка: тариф × срок</h2>
+  <div class="sub">Оба тарифа доступны на любой срок. Чем длиннее, тем дешевле месяц. Цифры из драфта 13 мая достроены до полной сетки по той же логике скидки.</div>
+
+  <table class="nb">
+    <thead><tr><th>Срок</th><th>Личный врач</th><th>Личная команда</th><th>Комментарий</th></tr></thead>
+    <tbody>
+      <tr><td>Помесячно</td><td class="price">35 000 ₽/мес</td><td class="price">60 000 ₽/мес</td><td class="miss">Личная команда дороже в 1,7 раза</td></tr>
+      <tr><td>3 месяца</td><td class="price">90 000 ₽ · 30 000 ₽/мес</td><td class="price">165 000 ₽ · 55 000 ₽/мес</td><td class="miss">Минимальный срок, за который видно изменение показателей</td></tr>
+      <tr><td>6 месяцев</td><td class="price">162 000 ₽ · 27 000 ₽/мес</td><td class="price">300 000 ₽ · 50 000 ₽/мес</td><td class="miss">—</td></tr>
+      <tr class="us"><td>12 месяцев</td><td class="price">300 000 ₽ · 25 000 ₽/мес</td><td class="price">500 000 ₽ · 41 700 ₽/мес</td><td class="miss">Целевой сценарий продажи в обоих тарифах</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule">
+    <b>Правило зачёта.</b> Кровь засчитывается в чекап, чекап засчитывается полностью в обе программы при покупке в течение 30 дней. Без процентов и звёздочек: «покупаете программу — обследование не стоит ничего». Такой механики нет ни у одной клиники Петербурга из проверенных.
+    <br><br>
+    <b>Развилка на 300 000 ₽.</b> Год «Личного врача» и полгода «Личной команды» стоят одинаково. Совпадение оставить намеренно — это готовый вопрос в разговоре: «за одни деньги вы можете год идти сами или полгода с личным куратором». Проверить на встрече, не съедает ли годовой «Личный врач» продажи полугодовой «Личной команды».
+    <br><br>
+    <b>Пол цены чекапа — 39 900 ₽.</b> Ниже начинаются расширенные лабораторные панели Инвитро и Ситилаба, и продукт с приборами и врачом за те же деньги читается как подвох, а не как выгода.
+  </div>
+</div></section>
+
+<section id="s4"><div class="wrap">
+  <div class="snum">04 · Сервис-карта</div>
+  <h2>Чем тарифы отличаются на самом деле</h2>
+  <div class="sub">Тарифы различаются не набором процедур, а глубиной сервиса. Медицина в обоих одна и та же — меняется, сколько человек берёт на себя клиника.</div>
+
+  <table class="sv">
+    <thead><tr><th>Что</th><th>Личный врач</th><th>Личная команда</th></tr></thead>
+    <tbody>
+      <tr><td>Связь с клиникой</td><td>Админ-аккаунт клиники</td><td class="yes">Личный координатор-куратор</td></tr>
+      <tr><td>Питание</td><td>Три готовых сценария рациона</td><td class="yes">Кастомный план и сверки по фото с нутрициологом</td></tr>
+      <tr><td>Спорт</td><td>Три базовых плана и одна обучающая тренировка</td><td class="yes">Онлайн-сопровождение тренером и одна тренировка в месяц</td></tr>
+      <tr><td>Меню в ресторане</td><td class="no">—</td><td class="yes">ИИ-агент: фото меню, в ответ рекомендации</td></tr>
+      <tr><td>Встречи с врачом</td><td>Старт, середина, финал</td><td class="yes">Каждые 2–4 недели</td></tr>
+      <tr><td>Контроль показателей</td><td>Датчик глюкозы на две недели, замеры три раза</td><td class="yes">Повторная кровь по плану, замеры ежемесячно</td></tr>
+      <tr><td>Добавки</td><td>Подбираем и присылаем ссылки</td><td class="yes">Считаем запас, заказываем за клиента и доставляем</td></tr>
+      <tr><td>Личный кабинет</td><td>Есть</td><td>Есть</td></tr>
+      <tr><td>Браслет и поток данных врачу</td><td>Есть, техника одна во всех тарифах</td><td>Есть, техника одна во всех тарифах</td></tr>
+      <tr><td>Приложения и подписки</td><td class="no">—</td><td class="yes">Устанавливаем и настраиваем; оплата подписок — открытый вопрос</td></tr>
+      <tr><td>Илья Скляров</td><td class="no">—</td><td class="yes">Вступительный блок на презентации первые месяц-два</td></tr>
+      <tr><td>Вау-моменты</td><td class="no">—</td><td class="yes">Минимум два за программу, сценарии в проработке</td></tr>
+      <tr><td>Лекции и мероприятия</td><td class="no">—</td><td class="yes">Библиотека лекций, открытые и закрытые события</td></tr>
+      <tr><td>Партнёрская сеть</td><td class="no">—</td><td class="yes">Карта скидок</td></tr>
+      <tr><td>Семья и компания</td><td class="no">—</td><td class="yes">−15% семье, −20% корпоративно, общий координатор</td></tr>
+      <tr><td>Welcome-pack</td><td class="no">—</td><td class="yes">Фирменный мерч-набор на старте</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">Принцип, который держит всю конструкцию: сервисная карта одинакова для любого направления. Когда добавится мышечная масса с ГЗТ или программа сна, меняется только медицинская начинка — воронка, тарифы и сервис остаются те же.</div>
+</div></section>
+
+<section id="s5"><div class="wrap">
+  <div class="snum">05 · Где мы по рынку</div>
+  <h2>Карта цен Петербурга</h2>
+  <div class="sub">108 цен, снятых с сайтов 31 августа, по коридорам в десять тысяч рублей. Петербург и область, без Москвы.</div>
+  <div class="chart" id="chart"></div>
+  <div class="chart-note">Два выброса за пределами шкалы: программа «Лонжевити» Первой Линии в Зеленогорске — 495 000 ₽ за пять дней с проживанием, и «Формула активного долголетия» X-Clinic в Репино — 1 552 100 ₽ за пятнадцать дней. Оба продукта за городом.</div>
+
+  <div class="facts" style="margin-top:34px">
+    <div class="fact"><div class="n">~25 000 ₽</div><div class="t">медиана рынка обследований Петербурга</div><div class="s">Наши 49 900 ₽ вдвое выше медианы и выше 80% всех продуктов города</div></div>
+    <div class="fact"><div class="n">3</div><div class="t">позиции во всём коридоре 40–50 тысяч</div><div class="s">Самая разреженная зона. Ниже — 42 продукта массовой полки, выше — 7 позиций с УЗИ, эндоскопией и МРТ</div></div>
+    <div class="fact"><div class="n">62 100 ₽</div><div class="t">стоит собрать наш чекап по частям</div><div class="s">Шесть визитов в шесть мест: кровь, VO2 Max на Крестовском, когнитив в институте мозга, биовозраст отдельно</div></div>
+  </div>
+
+  <h3 style="margin-top:44px">Рынок анализов крови</h3>
+  <div class="sub" style="margin-bottom:14px">Все лабораторные панели Петербурга из разведки, по возрастанию цены. Справа — число маркеров, где лаборатория его публикует.</div>
+  <div class="chart2" id="blood"></div>
+  <div class="chart-note">Колонка маркеров сравнивает не всё: маркеры стоят по-разному. Гомоцистеин в рознице 1 940 ₽, ApoB — 760 ₽, печёночный фермент — около 200 ₽. Гемотест со своими 63 показателями за 5 490 ₽ не дешевле нас, а просто набит массовой биохимией: ApoB, Lp(a), инсулина и гомоцистеина там нет.</div>
+
+  <div class="rule">
+    <b>Где мы по факту.</b> Восьмые из восемнадцати по цене, ровно в середине. Но среди панелей сопоставимого объёма (39–45 маркеров) мы <b>самые дешёвые с большим отрывом</b>: рынок держит 22 945 – 36 625 ₽, мы 14 900 ₽.
+    <br><br>
+    <b>Проверка снизу.</b> Десять ключевых маркеров нашей панели — ApoB, Lp(a), HbA1c, инсулин, hsCRP, ТТГ, тестостерон свободный, витамин D, ферритин, гомоцистеин — в розницу стоят <b>10 663 – 12 200 ₽</b>. За 14 900 ₽ человек получает эти десять плюс ещё тридцать.
+  </div>
+
+  <h3 style="margin-top:44px">Программы сопровождения: годовая цена</h3>
+  <div class="sub" style="margin-bottom:14px">Логарифмическая шкала, годовая стоимость программы. Полоса — вилка цен игрока, точка — единственная известная цена.</div>
+  <div class="chart3" id="prog"></div>
+  <div class="axis" id="progaxis"></div>
+  <div class="chart-note">Наша полка выбрана сознательно: выше среднего российского премиума, но заметно ниже люкса. EMC Ultima — страховой депозит с аванс-счётом, Hadassah — лечение диагностированных заболеваний по израильским протоколам. Это другая бизнес-модель, а не более дорогие соседи.</div>
+
+  <h3 style="margin-top:44px">Чего на рынке нет</h3>
+  <div class="sub" style="margin-bottom:14px">Главный аргумент в продаже — не про нас, а про рынок, и потому в него верят.</div>
+  <div class="facts">
+    <div class="fact"><div class="n">7 из 40</div><div class="t">организаций дают живой разбор результатов</div><div class="s">Считали только встречу, где врач сводит все данные вместе. У Скандинавии в чекапе за 100 000 ₽ значится лишь первичный приём терапевтом</div></div>
+    <div class="fact"><div class="n">0</div><div class="t">клинических чекапов дают план улучшения показателей</div><div class="s">Максимум дословно: «Есть отклонения, которые требуют наблюдения». План есть только внутри программ от 63 350 ₽</div></div>
+    <div class="fact"><div class="n">0</div><div class="t">программ обещают повторный замер тех же показателей</div><div class="s">Промежутка «измерили, изменили, измерили снова» нет ни у кого из проверенных</div></div>
+  </div>
+</div></section>
+
+<section id="s6"><div class="wrap">
+  <div class="snum">06 · Соседи</div>
+  <h2>С кем нас будут сравнивать</h2>
+  <div class="sub">Колонка справа — то, чего человек не получит за свои деньги у конкурента. Цены сняты с сайтов 31 августа.</div>
+  <table class="nb">
+    <thead><tr><th>Кто</th><th style="width:110px">Их цена</th><th style="width:105px">Мы</th><th>Чего у них нет</th></tr></thead>
+    <tbody>
+      <tr><td>Рэмси Диагностика, самый дорогой чекап линейки</td><td class="price">46 925 ₽</td><td class="delta">+2 975</td><td class="miss">Ни состава тела, ни VO2 Max, ни биовозраста, ни когнитива. Разбор в составе не назван</td></tr>
+      <tr><td>MedSwiss «Расширенная»</td><td class="price">54 600 ₽</td><td class="delta">−4 700</td><td class="miss">Метаболической панели нет, приборной диагностики нет</td></tr>
+      <tr><td>Скандинавия «Ваше здоровье» стандарт</td><td class="price">63 000 ₽</td><td class="delta">−13 100</td><td class="miss">В цене сутки в двухместной палате. ApoB, Lp(a), инсулина, гомоцистеина нет</td></tr>
+      <tr><td>СПИК-Вероника «Управление возрастом Longevity»</td><td class="price">от 63 350 ₽</td><td class="delta">−13 450</td><td class="miss">Состав не раскрыт, продукт косметологический, цена «от»</td></tr>
+      <tr><td>Медицентр «Расширенный комплекс»</td><td class="price">71 000 ₽</td><td class="delta">−21 100</td><td class="miss">У них УЗИ, эндоскопия и МРТ, у нас метаболика и функциональные тесты. Разные продукты</td></tr>
+      <tr><td>Инвитро, VIP-панель для мужчин 46–65</td><td class="price">76 090 ₽</td><td class="delta">−26 190</td><td class="miss">Только пробирки: ни прибора, ни врача, ни разбора</td></tr>
+      <tr><td>MedSwiss «Углублённая (VIP)»</td><td class="price">77–78 000 ₽</td><td class="delta">−27 100</td><td class="miss">Состав не раскрыт на сайте</td></tr>
+      <tr><td>Первая Линия, «Комплексный check-up»</td><td class="price">79 500 ₽</td><td class="delta">−29 600</td><td class="miss">Ехать в Зеленогорск, 40 км от города</td></tr>
+      <tr><td>Скандинавия «Ваше здоровье» расширенный</td><td class="price">100 000 ₽</td><td class="delta">−50 100</td><td class="miss">ApoB, Lp(a), инсулина, HOMA-IR, гомоцистеина, B12, половых гормонов нет. Итоговой встречи в составе нет</td></tr>
+      <tr><td>Белоостров «Комплексный чек-ап Премиум», мужской</td><td class="price">104 010 ₽</td><td class="delta">−54 110</td><td class="miss">Загородная клиника берёт вдвое больше за клинический чекап с МСКТ</td></tr>
+    </tbody>
+  </table>
+  <div class="note">Отдельно держим в виду Refresh на 1-й линии В.О.: клиника воспроизводит нашу воронку и отдаёт первичный приём с составом тела и кровью на 12 маркеров бесплатно при покупке программы. Против нуля цена не воюет — воюет состав, поэтому VO2 Max, биовозраст и когнитивный тест из чекапа убирать нельзя даже ради экономии.</div>
+</div></section>
+
+<section id="s7"><div class="wrap">
+  <div class="snum">07 · Экономика</div>
+  <h2>Что линейка приносит</h2>
+  <div class="sub">Расчёт на данных клиники из «Плана первички 2026» и себестоимости по данным Миши: лаборатория 10 000 ₽ за панель плюс работа доктора.</div>
+
+  <table class="nb">
+    <thead><tr><th>Продукт</th><th style="width:150px">Себестоимость</th><th style="width:150px">Маржа</th><th style="width:120px">Рентабельность</th><th>Вывод</th></tr></thead>
+    <tbody>
+      <tr><td>Анализ крови — 14 900 ₽</td><td class="price">10 000 ₽</td><td class="price">4 900 ₽</td><td class="delta">33%</td><td class="miss">Наценка 1,49×. Продукт не зарабатывает — он приводит</td></tr>
+      <tr class="us"><td>Чекап — 49 900 ₽</td><td class="price">14 000 – 22 000 ₽</td><td class="price">27 900 – 35 900 ₽</td><td class="delta">56 – 72%</td><td class="miss">Здоровая экономика при любой разумной ставке доктора</td></tr>
+      <tr><td>Для сравнения: чекап за 69 900 ₽</td><td class="price">18 000 ₽</td><td class="price">51 900 ₽</td><td class="delta">74%</td><td class="miss">Плюс 20 000 ₽ с каждого. Вопрос в том, сколько людей отвалится</td></tr>
+    </tbody>
+  </table>
+
+  <div class="facts" style="margin-top:30px">
+    <div class="fact"><div class="n">1,77 млн ₽</div><div class="t">LTV комплексного пациента стоматологии</div><div class="s">Таких 15% потока, и они дают 83% выручки. Чекап за 49 900 ₽ — около трёх процентов от того, что человек уже оставил в клинике</div></div>
+    <div class="fact"><div class="n">63 000 ₽</div><div class="t">LTV обычного пациента</div><div class="s">Их 85% потока. Чекап почти удваивает ценность такого пациента для клиники</div></div>
+    <div class="fact"><div class="n">2 007</div><div class="t">первичек за 2024-01 – 2026-04</div><div class="s">Если чекап купят 5% обычных пациентов — это 85 человек и 4,24 млн ₽ без рубля на привлечение</div></div>
+  </div>
+
+  <div class="rule">
+    <b>Сто чекапов при цене 49 900 ₽ дают 7,84 млн ₽</b> — при допущении, что 15% покупают «Личного врача» на три месяца, 5% уходят в «Личную команду» на год, зачёт учтён. При 69 900 ₽ те же деньги приносят 84 чекапа вместо ста: высокая цена выгоднее, только если подъём снижает поток меньше чем на 16%. Эластичности мы не знаем, замерить её можно лишь продажами.
+    <br><br>
+    <b>Практически:</b> начать с 49 900 ₽, отследить первые тридцать продаж, и если очередь встанет — поднимать. Поднять цену работающему продукту легко, опустить публично дорого.
+    <br><br>
+    <b>Чего в расчёте нет:</b> расходов на год сопровождения (координатор, врач, датчик, добавки, возможно пептиды), операционной мощности (сколько чекапов в день физически тянет клиника) и настоящих конверсий — 15% и 5% взяты как рабочее допущение.
+  </div>
+</div></section>
+
+<section id="s8"><div class="wrap">
+  <div class="snum">08 · Кому продаём</div>
+  <h2>Портреты из бренд-сессии</h2>
+  <div class="sub">Четыре портрета пациента клиники согласованы на сессии 13 июля. Направление целится не во всех.</div>
+  <table class="nb">
+    <thead><tr><th>Портрет</th><th style="width:130px">Наш?</th><th>Что с ним делать</th></tr></thead>
+    <tbody>
+      <tr class="us"><td><b>Мужчина 38–50.</b> Предприниматель или топ-менеджер, ценит время больше денег, приходит через личное знакомство</td><td class="delta">Ядро</td><td class="miss">Идеальное совпадение: ему некогда собирать обследование по шести местам, и он готов делегировать. Заходить только через личное приглашение, реклама на него не работает</td></tr>
+      <tr class="us"><td><b>Женщина 35–50.</b> Следит за собой, решение принимает сама, барьер — доверие</td><td class="delta">Ядро</td><td class="miss">Доверие к клинике уже есть, это снимает её главный барьер. Через неё же заходит мужчина 38–50 — она приводит мужа</td></tr>
+      <tr><td><b>65+.</b> Тотальная реабилитация, семья как драйвер решения</td><td class="delta">Вторая волна</td><td class="miss">Долголетие звучит для него убедительнее всех, но решение принимают дети. Отсюда семейный пакет: чем больше человек из семьи, тем дешевле за голову</td></tr>
+      <tr><td><b>28–38.</b> Начинает зарабатывать, амбиции и вкус, запрос на ортодонтию</td><td class="miss">Не наш</td><td class="miss">Ему рано и дорого. Для него нижняя ступень — анализ крови за 14 900 ₽, и то как разовая покупка</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule">
+    <b>Тип ценности у направления — эпистемическая, ценность знания.</b> Так записано в бренд-сессии, и это же показала разведка рынка: платят не за процедуры, а за понимание, что происходит с телом. Значит и продавать надо знание. Не «у нас VO2 Max и биоимпеданс», а «вы узнаете, с какой скоростью стареете и что с этим делать». Перечисление приборов превращает разговор в счёт процедур, где мы проигрываем клиникам с УЗИ и МРТ.
+    <br><br>
+    <b>Первый канал — врач на приёме в стоматологии.</b> Минута разговора в момент максимального доверия, карточка в руки, запись вне общей очереди. Дешевле любой рекламы и сильнее любой рассылки. Своим даём не скидку, а привилегию: приоритетную запись, зачёт ранее сданных анализов, расширенную панель первым пятидесяти. Скидка «для своих» превращает цену в фикцию.
+  </div>
+</div></section>
+
+<section id="s9"><div class="wrap">
+  <div class="snum">09 · Что решить</div>
+  <h2>Открытые вопросы на 22 сентября</h2>
+  <div class="sub">Без первых трёх линейку нельзя зафиксировать окончательно.</div>
+  <div class="open">
+    <div class="q"><div class="h">Пептиды: входят в цену программы или нет</div><div class="b">Три документа проекта говорят по-разному. Цена вопроса — 144 000 ₽ в год с пациента, 29% годовой «Личной команды». Пока не записано одним предложением, прибыль флагмана не считается</div><div class="who">Док и Никита</div></div>
+    <div class="q"><div class="h">Названия тарифов сопровождения</div><div class="b">Выбрать ветку: доверительное управление, прямая ответственность или контроль. После этого довести формулировки с дескрипторами и проверить на десяти живых людях из базы: что понятнее — «программа Старт» или «Личный врач»</div><div class="who">Миша</div></div>
+    <div class="q"><div class="h">Себестоимость чекапа</div><div class="b">Панель крови, амортизация платформы, час врача. Без этой цифры маржа при 49 900 ₽ известна только вилкой</div><div class="who">Никита</div></div>
+    <div class="q"><div class="h">Зачёт анализа крови в чекап</div><div class="b">Да или нет и в какой срок. От этого зависит, работает лестница 14 900 → 49 900 или две ступени конкурируют между собой</div><div class="who">Решение встречи</div></div>
+    <div class="q"><div class="h">Кто ведёт разбор результатов</div><div class="b">Ядро продукта и единственное, чего нет у 33 организаций из 40. Врач разбора важнее любого прибора в составе</div><div class="who">Док и Никита</div></div>
+    <div class="q"><div class="h">Размер и сегментация базы стоматологии</div><div class="b">Сколько человек 40+, сколько с крупным чеком, сколько не приходили больше года. Отсечка «наш пациент» тоже не определена — одна чистка или 100 000 ₽ потрачено</div><div class="who">Миша и координатор</div></div>
+    <div class="q"><div class="h">Часы координатора и welcome-pack</div><div class="b">Реалистичная нагрузка куратора (сколько пациентов ведёт один человек) и состав мерч-набора. Заказ welcome-pack пора начинать — КП и переговоры занимают время</div><div class="who">Команда</div></div>
+    <div class="q"><div class="h">Браслет и подписки</div><div class="b">Какое устройство стандартизируем (Whoop или Oura) и чем платим зарубежную подписку из России. Позиция Никиты: браслет — доп.услуга, а не обязательная часть программы; в апреле фиксировали, что его стоимость в тариф не входит. Решить до заказа Welcome Pack</div><div class="who">Миша и Никита</div></div>
+    <div class="q"><div class="h">Вау-моменты и сложные разговоры</div><div class="b">Сценарии, которых пока нет на бумаге: как подаём плохие результаты, ритуал празднования, аварийный набор на срыве, когда и как просим отзыв. Кто исполняет — координатор или отдельная роль</div><div class="who">Миша</div></div>
+    <div class="q"><div class="h">Партнёрство вместо закупки оборудования</div><div class="b">Runlab на Крестовском — единственный VO2 Max в ближнем гео за 7 000 ₽, договориться дешевле, чем закупать. Euromed — единственный чекап города с инсулином, ГСПГ и B12, цену не публикует</div><div class="who">Координатор</div></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Источники: «(C) Тарифы Лонживити — драфт» (13 мая) · «(C) 2026-08-25 Встреча Никита — задачи по долголетию» · «(C) 2026-08-31 Разведка — Чекапы СПб (выводы и цена)» и «Компонентные цены СПб» · «2026-09-03 Встреча — PJM Долголетие» · «(C) 2026-09-03 Лонживити — Цена входных продуктов (отчёт)» (7 сентября) · «(C) Дескриптор клиники после расширения» (1 сентября) · проверка названий по Вордстату 15 сентября.<br><br>
+  Цены конкурентов сняты с сайтов 31 августа 2026 года и меняются: Первая Линия за время работы подняла обследование с 69 000 до 79 500 ₽.
+</div></footer>
+
+<script>
+var DIST=[{lab:"0–10K",n:10},{lab:"10–20K",n:22},{lab:"20–30K",n:11},{lab:"30–40K",n:9},
+ {lab:"40–50K",n:3,us:true},{lab:"50–60K",n:4},{lab:"60–70K",n:2},{lab:"70–80K",n:7},
+ {lab:"80–90K",n:1},{lab:"90–100K",n:2},{lab:"100–110K",n:2},{lab:"110–120K",n:0},
+ {lab:"120–130K",n:3},{lab:"130–140K",n:1}];
+var max=Math.max.apply(null,DIST.map(function(d){return d.n}));
+document.getElementById("chart").innerHTML=DIST.map(function(d){
+  var w=d.n?Math.max(d.n/max*100,1.2):0;
+  return '<div class="bar-row'+(d.us?' us':'')+'" title="'+d.lab+': '+d.n+' продуктов">'+
+    '<div class="lab">'+d.lab+'</div>'+
+    '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%"></div>'+
+      (d.us?'<span class="us-tag" style="left:'+w+'%">мы здесь · чекап 49 900 ₽</span>':'')+'</div>'+
+    '<div class="cnt">'+d.n+'</div></div>';
+}).join("");
+
+var BLOOD=[
+ {n:"Инвитро «18-45 базовое»",p:4725,m:null},
+ {n:"Гемотест «Полный чек-ап 63»",p:5490,m:63},
+ {n:"KDL «Базовый»",p:10415,m:21},
+ {n:"Гемотест «Женский чек-ап»",p:10890,m:31},
+ {n:"Инвитро «18-45 оптимальное»",p:11390,m:null},
+ {n:"LabQuest «Время жить»",p:13850,m:null},
+ {n:"KDL «Расширенный»",p:13975,m:27},
+ {n:"Анализ крови SmileClinic",p:14900,m:40,us:true},
+ {n:"KDL «Экспертный»",p:16870,m:28},
+ {n:"Инвитро «56+ расширенное»",p:17790,m:null},
+ {n:"Инвитро «18-45 расширенное»",p:22790,m:null},
+ {n:"Хеликс «Полное обследование» м",p:22945,m:45},
+ {n:"Хеликс «Полное обследование» ж",p:24130,m:43},
+ {n:"Инвитро «46-65 расширенное»",p:32690,m:null},
+ {n:"Ситилаб «Чекап 40-60»",p:36625,m:39},
+ {n:"Инвитро «18-45 VIP»",p:42290,m:null},
+ {n:"Первая Линия «Лабораторный»",p:56500,m:null},
+ {n:"Инвитро «46-65 VIP»",p:76090,m:null}
+];
+var bmax=Math.max.apply(null,BLOOD.map(function(d){return d.p}));
+document.getElementById("blood").innerHTML=BLOOD.map(function(d){
+  var w=Math.max(d.p/bmax*100,1.2);
+  var mk=d.m?('<span class="m"> · '+d.m+' марк.</span>'):'<span class="m"> · —</span>';
+  return '<div class="b2-row'+(d.us?' us':'')+'" title="'+d.n+': '+d.p.toLocaleString("ru")+' ₽">'+
+    '<div class="lab2">'+d.n+'</div>'+
+    '<div class="bar-track"><div class="bar-fill" style="width:'+w+'%"></div></div>'+
+    '<div class="cnt2">'+d.p.toLocaleString("ru")+mk+'</div></div>';
+}).join("");
+
+/* программы сопровождения, годовая цена, лог-шкала 50K – 15M */
+var PROG=[
+ {n:"Сетевые клиники, диетологи",a:50000,b:150000,note:"базовая полка"},
+ {n:"Bioniq Society, клубная карта",a:150000,b:300000,note:"членство без диагностики"},
+ {n:"Refresh",a:150000,b:400000,note:"главный якорь"},
+ {n:"Эстелаб",a:200000,b:400000,note:"коррекция веса"},
+ {n:"Atlas «Врач в друзьях»",a:200000,b:400000,note:"подписка на доступ к врачу"},
+ {n:"Личный врач · год",a:300000,b:300000,us:true,note:"наш"},
+ {n:"Личная команда · год",a:500000,b:500000,us:true,note:"наш флагман"},
+ {n:"EMC Ultima",a:1440000,b:1440000,note:"страховой депозит"},
+ {n:"Hadassah",a:5000000,b:15000000,note:"лечение по израильским протоколам"}
+];
+var LO=50000,HI=15000000;
+function pos(v){return (Math.log(v)-Math.log(LO))/(Math.log(HI)-Math.log(LO))*100}
+function fmt(v){return v>=1000000?(v/1000000).toFixed(v%1000000?1:0).replace(".",",")+" млн ₽":Math.round(v/1000)+"K ₽"}
+document.getElementById("prog").innerHTML=PROG.map(function(d){
+  var x1=pos(d.a),x2=pos(d.b);
+  var body=(d.a===d.b)
+    ? '<span class="dot" style="left:'+x1+'%"></span>'
+    : '<div class="range-fill" style="left:'+x1+'%;width:'+Math.max(x2-x1,1)+'%"></div>';
+  var label=(d.a===d.b)?fmt(d.a):fmt(d.a)+" – "+fmt(d.b);
+  return '<div class="b3-row'+(d.us?' us':'')+'" title="'+d.n+': '+label+'">'+
+    '<div class="lab2">'+d.n+'</div>'+
+    '<div class="range-track">'+body+'</div>'+
+    '<div class="cnt2">'+label+'</div></div>';
+}).join("");
+document.getElementById("progaxis").innerHTML=
+  [[50000,"50K"],[100000,"100K"],[500000,"500K"],[1000000,"1 млн"],[5000000,"5 млн"],[15000000,"15 млн"]]
+  .map(function(t){return '<span style="left:'+pos(t[0])+'%">'+t[1]+'</span>'}).join("");
+</script>
+</body></html>

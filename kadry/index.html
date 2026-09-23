@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кадры SmileClinic</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1c1c1e; --ink-2:#55555c; --ink-3:#8a8a92;
+  --line:#e4e2dd; --line-2:#efedE8;
+  --bg:#f7f6f3; --card:#ffffff;
+  --bronze:#8a6a43; --bronze-soft:#f0e7dc; --bronze-line:#d8c6ae;
+  --ok:#3f6b57; --ok-soft:#e7efea;
+  --mute:#9a9aa2; --mute-soft:#eeedea;
+  --black-soft:#2b2b2e;
+  --r:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,-apple-system,system-ui,sans-serif;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+
+/* вход */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.gate .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:34px;width:100%;max-width:380px}
+.gate h1{margin:0 0 6px;font-size:20px;letter-spacing:-.02em}
+.gate h1 span{color:var(--bronze)}
+.gate p{margin:0 0 20px;color:var(--ink-3);font-size:13px;line-height:1.5}
+.gate input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+.gate input:focus{outline:none;border-color:var(--bronze)}
+.gate .err{color:var(--bronze);font-size:12px;font-weight:600;min-height:16px;margin-bottom:8px}
+.gate .adv{margin-top:14px;font-size:12px;color:var(--ink-3)}
+.gate .adv a{color:var(--bronze);cursor:pointer}
+
+header{background:var(--card);border-bottom:1px solid var(--line);padding:16px 28px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:20}
+.brand{font-weight:700;letter-spacing:-.02em;font-size:17px}
+.brand span{color:var(--bronze);font-weight:600}
+.count{color:var(--ink-3);font-size:13px;margin-left:auto}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--r);font-weight:600;font-size:13px}
+.btn:hover{background:#000}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink-3)}
+
+.tabs{display:flex;gap:6px;padding:18px 28px 0;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--card);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ink-2)}
+.tab b{font-weight:600;color:var(--ink-3);margin-left:6px}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab.on b{color:rgba(255,255,255,.6)}
+
+.filters{display:flex;gap:10px;padding:16px 28px;flex-wrap:wrap;align-items:center}
+.search{position:relative;flex:1;min-width:240px;max-width:420px}
+.search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}
+.search input:focus{outline:none;border-color:var(--bronze)}
+.search svg{position:absolute;left:13px;top:12px;opacity:.4}
+select.f{padding:11px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);color:var(--ink-2)}
+.clear{background:none;border:none;color:var(--ink-3);font-size:13px;text-decoration:underline}
+
+.wrap{padding:0 28px 60px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600;padding:13px 16px;border-bottom:1px solid var(--line);background:#fbfaf8}
+td{padding:14px 16px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tr.row{cursor:pointer}
+tr.row:hover td{background:#fbfaf8}
+tr:last-child td{border-bottom:none}
+.fio{font-weight:600}
+.sub{color:var(--ink-3);font-size:12px;margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-work{background:var(--bronze-soft);color:var(--bronze)}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-mute{background:var(--mute-soft);color:var(--mute)}
+.p-black{background:var(--black-soft);color:#fff}
+.when{color:var(--ink-2);font-size:13px}
+.when i{display:block;font-style:normal;color:var(--ink-3);font-size:11px;margin-top:2px}
+.empty{padding:70px 20px;text-align:center;color:var(--ink-3);background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.note{padding:12px 16px;margin-bottom:14px;background:var(--bronze-soft);border:1px solid var(--bronze-line);border-radius:var(--r);color:var(--bronze);font-size:13px;line-height:1.5}
+
+.shade{position:fixed;inset:0;background:rgba(20,20,22,.45);opacity:0;pointer-events:none;transition:.2s;z-index:30}
+.shade.on{opacity:1;pointer-events:auto}
+.panel{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100%;background:var(--card);z-index:31;transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.1)}
+.panel.on{transform:none}
+.p-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:14px}
+.p-head h2{margin:0;font-size:19px;letter-spacing:-.02em}
+.p-head .sub{margin-top:5px;font-size:13px}
+.x{margin-left:auto;background:none;border:none;font-size:22px;line-height:1;color:var(--ink-3);padding:0 2px}
+.p-body{padding:22px 26px;overflow-y:auto;flex:1}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+.fld input,.fld select,.fld textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--bronze)}
+.fld textarea{min-height:90px;resize:vertical;line-height:1.55}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inline{display:flex;gap:8px;align-items:center}
+.inline a{color:var(--bronze);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;border:1px solid var(--bronze-line);padding:9px 12px;border-radius:8px}
+.file{border:1px dashed var(--bronze-line);background:#fdfbf8;border-radius:8px;padding:13px;display:flex;align-items:center;gap:10px;font-size:13px}
+.file .nm{font-weight:600;color:var(--bronze);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .nm a{color:inherit}
+.file label{background:none;border:none;color:var(--ink-3);font-size:12px;text-decoration:underline;cursor:pointer;margin:0;text-transform:none;letter-spacing:0}
+.hist{margin-top:26px;border-top:1px solid var(--line);padding-top:18px}
+.hist h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:0 0 12px}
+.hi{display:flex;gap:12px;font-size:13px;padding:7px 0;color:var(--ink-2)}
+.hi time{color:var(--ink-3);font-size:12px;white-space:nowrap;min-width:104px}
+.p-foot{padding:16px 26px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.p-foot .btn{flex:1}
+.saved{color:var(--ok);font-size:12px;font-weight:600;opacity:0;transition:.2s}
+.saved.on{opacity:1}
+.dup{background:#fdf6ee;border:1px solid var(--bronze-line);border-radius:8px;padding:13px;margin-bottom:16px;font-size:13px;line-height:1.5;color:var(--bronze);display:none}
+.dup.on{display:block}
+.dup b{display:block;margin-bottom:4px}
+.dup button{background:none;border:none;color:var(--bronze);text-decoration:underline;font-size:13px;padding:0;font-weight:600}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:600;z-index:50;transition:.25s;opacity:0}
+.toast.on{transform:translate(-50%,0);opacity:1}
+@media(max-width:720px){
+  header,.tabs,.filters,.wrap{padding-left:14px;padding-right:14px}
+  th:nth-child(2),td:nth-child(2),th:nth-child(4),td:nth-child(4){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="box">
+    <h1>Кадры <span>smileclinic</span></h1>
+    <p>База кандидатов клиники. Введи код доступа и своё имя, чтобы в истории было видно, кто что менял.</p>
+    <input id="gPin" type="password" placeholder="Код доступа" autocomplete="current-password">
+    <input id="gWho" placeholder="Твоё имя" autocomplete="name">
+    <div class="err" id="gErr"></div>
+    <button class="btn" style="width:100%" id="gBtn" onclick="enter()">Войти</button>
+    <div class="adv">Адрес базы: <a onclick="setApi()" id="apiHint">задать</a></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">Кадры <span>smileclinic</span></div>
+  <div class="count" id="count"></div>
+  <button class="btn" onclick="openNew()">+ Новый кандидат</button>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="filters">
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" placeholder="Фамилия, телефон, ник в телеграме…" oninput="render()">
+  </div>
+  <select class="f" id="fRole" onchange="render()"></select>
+  <select class="f" id="fStatus" onchange="render()"></select>
+  <button class="clear" onclick="resetF()">сбросить</button>
+</div>
+
+<div class="wrap">
+  <div class="note" id="tabNote"></div>
+  <div id="list"></div>
+</div>
+
+<div class="shade" id="shade" onclick="closePanel()"></div>
+<aside class="panel" id="panel">
+  <div class="p-head">
+    <div>
+      <h2 id="pTitle">—</h2>
+      <div class="sub" id="pSub"></div>
+    </div>
+    <button class="x" onclick="closePanel()">&times;</button>
+  </div>
+  <div class="p-body">
+    <div class="dup" id="dup"></div>
+    <div class="fld"><label>ФИО</label><input id="fFio" placeholder="Иванова Анна Сергеевна"></div>
+    <div class="two">
+      <div class="fld"><label>Должность</label><input id="fRoleI" list="roles" placeholder="Гигиенист"><datalist id="roles"></datalist></div>
+      <div class="fld"><label>Статус</label><select id="fStat"></select></div>
+    </div>
+    <div class="fld"><label>Телефон</label>
+      <div class="inline"><input id="fPhone" placeholder="+7 900 000-00-00"><a id="lPhone" href="#">позвонить</a></div>
+    </div>
+    <div class="fld"><label>Телеграм</label>
+      <div class="inline"><input id="fTg" placeholder="@nickname"><a id="lTg" href="#" target="_blank">написать</a></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>Источник</label><input id="fSrc" list="srcs" placeholder="hh.ru"><datalist id="srcs"></datalist></div>
+      <div class="fld"><label>Ожидания по деньгам</label><input id="fPay" placeholder="от 120 000"></div>
+    </div>
+    <div class="fld"><label>Кто ведёт</label><input id="fOwner" placeholder="Любовь"></div>
+    <div class="fld"><label>Резюме</label>
+      <div class="file">
+        <span class="nm" id="fResume">файл не приложен</span>
+        <label>приложить<input type="file" accept="application/pdf,image/*" style="display:none" onchange="uploadFile(this)"></label>
+      </div>
+    </div>
+    <div class="fld"><label>Комментарий</label><textarea id="fNote" placeholder="Что важно помнить об этом человеке"></textarea></div>
+    <div class="hist" id="histBox"><h3>История</h3><div id="hist"></div></div>
+  </div>
+  <div class="p-foot">
+    <button class="btn" id="saveBtn" onclick="save()">Сохранить</button>
+    <button class="btn ghost" onclick="closePanel()">Отмена</button>
+    <span class="saved" id="saved">сохранено</span>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== подключение к таблице ===== */
+var API = localStorage.getItem('sc_api') || '';   /* сюда встаёт адрес Apps Script */
+var PIN = localStorage.getItem('sc_pin') || '';
+var WHO = localStorage.getItem('sc_who') || '';
+
+function setApi(){
+  var v = prompt('Адрес веб-приложения Apps Script (заканчивается на /exec)', API);
+  if (v){ API = v.trim(); localStorage.setItem('sc_api', API); hintApi(); }
+}
+function hintApi(){
+  document.getElementById('apiHint').textContent = API ? 'подключено' : 'задать';
+}
+
+function call(payload){
+  payload.pin = PIN;
+  return fetch(API, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},   /* text/plain, иначе Apps Script упрётся в preflight */
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); });
+}
+
+function toast(t){
+  var el = document.getElementById('toast');
+  el.textContent = t; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('on'); }, 2600);
+}
+
+/* ===== вход ===== */
+function enter(){
+  var pin = document.getElementById('gPin').value.trim();
+  var who = document.getElementById('gWho').value.trim();
+  var err = document.getElementById('gErr');
+  if (!API){ err.textContent = 'Сначала задай адрес базы, ссылка ниже.'; return; }
+  if (!pin || !who){ err.textContent = 'Нужен код и имя.'; return; }
+  var btn = document.getElementById('gBtn'); btn.disabled = true; btn.textContent = 'Проверяю…';
+  PIN = pin; WHO = who;
+  call({ action:'list' }).then(function(r){
+    btn.disabled = false; btn.textContent = 'Войти';
+    if (r.error === 'pin'){ err.textContent = 'Код не подошёл.'; return; }
+    if (r.error){ err.textContent = r.error; return; }
+    localStorage.setItem('sc_pin', PIN); localStorage.setItem('sc_who', WHO);
+    apply(r);
+    document.getElementById('gate').style.display = 'none';
+  }).catch(function(e){
+    btn.disabled = false; btn.textContent = 'Войти';
+    err.textContent = 'База не отвечает. Проверь адрес.';
+  });
+}
+
+/* ===== данные ===== */
+var DB = [], HIST = {}, STATUSES = [], ROLES = [], SOURCES = [], tab = 'all', cur = null, isNew = false;
+
+var TABS = [
+ {k:'all',  t:'Все'},
+ {k:'В работе', t:'В работе', n:'Те, с кем идёт диалог прямо сейчас. Как только человек вышел на работу или получил отказ, он уезжает на другую вкладку сам.'},
+ {k:'Принятые', t:'Принятые', n:'Оффер принят или человек уже работает. Отсюда отправляется анкета на личную карточку.'},
+ {k:'Банк резюме', t:'Банк резюме', n:'Те, к кому можно вернуться: резерв, отказы, неактуальные. Открылась вакансия, выбери должность в фильтре и увидишь всех, кого смотрели за год.'},
+ {k:'Чёрный список', t:'Чёрный список', n:'Не рассматриваем. Держим в базе, чтобы не завести повторно.'}
+];
+var PILL = {'В работе':'p-work','Принятые':'p-ok','Банк резюме':'p-mute','Чёрный список':'p-black'};
+function G(st){ for (var i=0;i<STATUSES.length;i++) if (STATUSES[i].k===st) return STATUSES[i].g; return 'В работе'; }
+function C(st){ return PILL[G(st)] || 'p-mute'; }
+
+function apply(r){
+  DB = r.rows; HIST = r.hist || {}; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;
+  initUI(); render();
+}
+function reload(){ return call({action:'list'}).then(function(r){ if(!r.error) apply(r); }); }
+
+function initUI(){
+  document.getElementById('tabs').innerHTML = TABS.map(function(t){
+    return '<button class="tab" data-k="'+t.k+'" onclick="setTab(\''+t.k+'\')">'+t.t+'<b></b></button>';
+  }).join('');
+  var roles = ROLES.concat(DB.map(function(r){return r.role;})).filter(Boolean);
+  roles = roles.filter(function(v,i){ return roles.indexOf(v)===i; }).sort();
+  document.getElementById('fRole').innerHTML = '<option value="">Все должности</option>'+roles.map(function(r){return '<option>'+r+'</option>';}).join('');
+  document.getElementById('roles').innerHTML = roles.map(function(r){return '<option>'+r+'</option>';}).join('');
+  document.getElementById('srcs').innerHTML  = SOURCES.map(function(r){return '<option>'+r+'</option>';}).join('');
+  document.getElementById('fStatus').innerHTML = '<option value="">Все статусы</option>'+STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
+  document.getElementById('fStat').innerHTML = STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
+}
+function setTab(k){ tab = k; render(); }
+function resetF(){ document.getElementById('q').value=''; document.getElementById('fRole').value=''; document.getElementById('fStatus').value=''; render(); }
+
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-zа-я0-9@]/gi,''); }
+function dig(s){ return String(s||'').replace(/\D/g,'').slice(-10); }
+function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function render(){
+  var qRaw = document.getElementById('q').value,
+      q = norm(qRaw), qd = qRaw.replace(/\D/g,''),
+      fr = document.getElementById('fRole').value,
+      fs = document.getElementById('fStatus').value;
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(b){
+    var k = b.dataset.k;
+    b.classList.toggle('on', k===tab);
+    b.querySelector('b').textContent = k==='all' ? DB.length : DB.filter(function(r){ return G(r.status)===k; }).length;
+  });
+  var t = TABS.filter(function(x){ return x.k===tab; })[0];
+  var nb = document.getElementById('tabNote');
+  nb.style.display = t && t.n ? 'block' : 'none'; nb.textContent = t && t.n ? t.n : '';
+
+  var rows = DB.filter(function(r){
+    return (tab==='all' || G(r.status)===tab) && (!fr || r.role===fr) && (!fs || r.status===fs);
+  });
+  if (q) rows = rows.filter(function(r){
+    return [r.fio,r.role,r.tg,r.note,r.src,r.owner].some(function(v){ return norm(v).indexOf(q)>=0; })
+        || (qd.length>=3 && dig(r.phone).indexOf(qd)>=0);
+  });
+  rows.sort(function(a,b){ return d(b.changed)-d(a.changed); });
+
+  document.getElementById('count').textContent = rows.length+' из '+DB.length;
+  document.getElementById('list').innerHTML = rows.length ? '<table>'+
+    '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Последнее касание</th></tr>'+
+    rows.map(function(r){ return '<tr class="row" onclick="open_(\''+r.id+'\')">'+
+      '<td><div class="fio">'+esc(r.fio)+'</div><div class="sub">'+esc(r.phone)+(r.tg?' · '+esc(r.tg):'')+'</div></td>'+
+      '<td>'+(esc(r.role)||'—')+'</td>'+
+      '<td><span class="pill '+C(r.status)+'"><span class="dot"></span>'+esc(r.status)+'</span></td>'+
+      '<td class="when">'+esc(r.changed)+'<i>'+esc(r.last)+'</i></td></tr>';
+    }).join('')+'</table>'
+    : '<div class="empty">Никого не нашлось. Поменяй фильтры или заведи нового кандидата.</div>';
+}
+function d(s){ var p = String(s||'01.01.2000').split('.'); return new Date(p[2],p[1]-1,p[0]); }
+
+/* ===== карточка ===== */
+function open_(id){
+  cur = DB.filter(function(r){ return String(r.id)===String(id); })[0];
+  if (!cur) return;
+  isNew = false;
+  document.getElementById('pTitle').textContent = cur.fio;
+  document.getElementById('pSub').textContent = (cur.role||'') + (cur.owner ? ' · ведёт ' + cur.owner : '');
+  fill(cur); document.getElementById('dup').classList.remove('on');
+  document.getElementById('histBox').style.display = 'block';
+  show();
+}
+function openNew(){
+  cur = {id:'',fio:'',role:'',status:(STATUSES[0]||{}).k||'Новый',phone:'',tg:'',src:'',pay:'',resume:'',note:'',owner:WHO};
+  isNew = true;
+  document.getElementById('pTitle').textContent = 'Новый кандидат';
+  document.getElementById('pSub').textContent = 'Заполни хотя бы ФИО и телефон';
+  fill(cur); document.getElementById('dup').classList.remove('on');
+  document.getElementById('histBox').style.display = 'none';
+  show(); setTimeout(function(){ document.getElementById('fFio').focus(); }, 260);
+}
+function fill(r){
+  fFio.value=r.fio; fRoleI.value=r.role; fStat.value=r.status; fPhone.value=r.phone;
+  fTg.value=r.tg; fSrc.value=r.src; fPay.value=r.pay; fNote.value=r.note; fOwner.value=r.owner||WHO;
+  var res = document.getElementById('fResume');
+  res.innerHTML = r.resume ? '<a href="'+esc(r.resume)+'" target="_blank">открыть резюме</a>' : 'файл не приложен';
+  res.dataset.url = r.resume || '';
+  lPhone.href = 'tel:'+String(r.phone||'').replace(/\s/g,'');
+  lTg.href = 'https://t.me/'+String(r.tg||'').replace('@','');
+  var h = HIST[String(r.id)] || [];
+  document.getElementById('hist').innerHTML = h.map(function(x){
+    return '<div class="hi"><time>'+esc(x.when)+'</time><span>'+esc(x.what)+(x.who?' · '+esc(x.who):'')+'</span></div>';
+  }).join('') || '<div class="hi"><span style="color:var(--ink-3)">пока пусто</span></div>';
+}
+function show(){ document.getElementById('panel').classList.add('on'); document.getElementById('shade').classList.add('on'); }
+function closePanel(){ document.getElementById('panel').classList.remove('on'); document.getElementById('shade').classList.remove('on'); }
+
+/* ===== резюме ===== */
+function uploadFile(input){
+  var f = input.files[0]; if (!f) return;
+  if (f.size > 15*1024*1024){ toast('Файл больше 15 МБ, не пройдёт'); return; }
+  var fio = (fFio.value.trim() || 'Кандидат').replace(/[\\/:*?"<>|]/g,'');
+  var ext = (f.name.match(/\.[a-z0-9]+$/i)||['.pdf'])[0];
+  var name = fio + ' — ' + (fRoleI.value.trim() || 'резюме') + ' ' + Date.now().toString().slice(-6) + ext;
+  document.getElementById('fResume').textContent = 'загружаю…';
+  var fr = new FileReader();
+  fr.onload = function(){
+    var b64 = String(fr.result).split(',')[1];
+    call({ action:'upload', name:name, data:b64, mime:f.type }).then(function(r){
+      var res = document.getElementById('fResume');
+      if (r.error || !r.url){ res.textContent = 'не загрузилось'; toast(r.error || 'Яндекс.Диск не ответил'); return; }
+      res.innerHTML = '<a href="'+esc(r.url)+'" target="_blank">открыть резюме</a>';
+      res.dataset.url = r.url;
+      toast('Резюме на Яндекс.Диске');
+    });
+  };
+  fr.readAsDataURL(f);
+  input.value = '';
+}
+
+/* ===== дубли ===== */
+document.addEventListener('input', function(e){
+  if (!isNew || (e.target.id!=='fPhone' && e.target.id!=='fFio')) return;
+  var p = dig(fPhone.value), f = norm(fFio.value);
+  var hit = DB.filter(function(r){
+    return (p.length>=10 && dig(r.phone)===p) || (f.length>8 && norm(r.fio)===f);
+  })[0];
+  var box = document.getElementById('dup');
+  if (hit){
+    box.innerHTML = '<b>Этот человек уже есть в базе</b>'+esc(hit.fio)+', '+esc(hit.role)+', статус «'+esc(hit.status)+'», последнее касание '+esc(hit.changed)+'.<br>'+
+                    '<button onclick="open_(\''+hit.id+'\')">Открыть его карточку</button>';
+    box.classList.add('on');
+  } else box.classList.remove('on');
+});
+
+/* ===== сохранение ===== */
+function save(){
+  if (!fFio.value.trim()){ fFio.focus(); return; }
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Сохраняю…';
+  var row = {
+    id: cur.id, fio: fFio.value.trim(), role: fRoleI.value.trim(), status: fStat.value,
+    phone: fPhone.value.trim(), tg: fTg.value.trim(), src: fSrc.value.trim(), pay: fPay.value.trim(),
+    resume: document.getElementById('fResume').dataset.url || '',
+    note: fNote.value.trim(), owner: fOwner.value.trim() || WHO
+  };
+  call({ action:'save', row: row, who: WHO }).then(function(r){
+    btn.disabled = false; btn.textContent = 'Сохранить';
+    if (r.error){ toast(r.error); return; }
+    var s = document.getElementById('saved'); s.classList.add('on');
+    setTimeout(function(){ s.classList.remove('on'); }, 1400);
+    reload().then(function(){
+      if (isNew){ isNew = false; cur = DB.filter(function(x){ return String(x.id)===String(r.row.id); })[0] || cur; }
+      if (cur){ open_(cur.id); }
+    });
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'Сохранить';
+    toast('Не сохранилось, база не ответила');
+  });
+}
+
+document.addEventListener('keydown', function(e){ if (e.key==='Escape') closePanel(); });
+
+/* старт */
+hintApi();
+if (API && PIN && WHO){
+  document.getElementById('gPin').value = PIN;
+  document.getElementById('gWho').value = WHO;
+  enter();
+}
+</script>
+</body>
+</html>

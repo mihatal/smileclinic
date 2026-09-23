@@ -109,6 +109,9 @@ tr:last-child td{border-bottom:none}
 .p-foot{padding:16px 26px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
 .p-foot .btn{flex:1}
 .saved{color:var(--ok);font-size:12px;font-weight:600;opacity:0;transition:.2s}
+.del{background:none;border:none;color:var(--ink-3);font-size:12px;text-decoration:underline;padding:4px 2px}
+.del:hover{color:var(--black-soft)}
+.del:disabled{opacity:.4}
 .saved.on{opacity:1}
 .dup{background:#fdf6ee;border:1px solid var(--bronze-line);border-radius:8px;padding:13px;margin-bottom:16px;font-size:13px;line-height:1.5;color:var(--bronze);display:none}
 .dup.on{display:block}
@@ -199,6 +202,7 @@ tr:last-child td{border-bottom:none}
     <button class="btn" id="saveBtn" onclick="save()">Сохранить</button>
     <button class="btn ghost" onclick="closePanel()">Отмена</button>
     <span class="saved" id="saved">сохранено</span>
+    <button class="del" id="delBtn" onclick="del()">удалить</button>
   </div>
 </aside>
 
@@ -340,6 +344,7 @@ function open_(id){
   document.getElementById('pSub').textContent = (cur.role||'') + (cur.owner ? ' · ведёт ' + cur.owner : '');
   fill(cur); document.getElementById('dup').classList.remove('on');
   document.getElementById('histBox').style.display = 'block';
+  document.getElementById('delBtn').style.display = '';
   show();
 }
 function openNew(){
@@ -349,6 +354,7 @@ function openNew(){
   document.getElementById('pSub').textContent = 'Заполни хотя бы ФИО и телефон';
   fill(cur); document.getElementById('dup').classList.remove('on');
   document.getElementById('histBox').style.display = 'none';
+  document.getElementById('delBtn').style.display = 'none';   /* нечего удалять, человека ещё нет */
   show(); setTimeout(function(){ document.getElementById('fFio').focus(); }, 260);
 }
 function fill(r){
@@ -428,6 +434,23 @@ function save(){
   }).catch(function(){
     btn.disabled = false; btn.textContent = 'Сохранить';
     toast('Не сохранилось, база не ответила');
+  });
+}
+
+function del(){
+  if (!cur || !cur.id) return;
+  if (!confirm('Удалить «' + cur.fio + '» из базы?\n\nЧеловек пропадёт из списка и поиска. Если это ошибка, строку можно достать обратно с листа «Удалённые» в таблице.')) return;
+  var btn = document.getElementById('delBtn');
+  btn.disabled = true; btn.textContent = 'удаляю…';
+  call({ action:'delete', id: cur.id, who: WHO }).then(function(r){
+    btn.disabled = false; btn.textContent = 'удалить';
+    if (r.error){ toast(r.error); return; }
+    closePanel();
+    toast('Удалён: ' + r.fio);
+    reload();
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'удалить';
+    toast('Не удалилось, база не ответила');
   });
 }
 

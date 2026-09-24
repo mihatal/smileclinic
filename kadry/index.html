@@ -185,7 +185,10 @@ tr:last-child td{border-bottom:none}
       <div class="inline"><input id="fTg" placeholder="@nickname"><a id="lTg" href="#" target="_blank">написать</a></div>
     </div>
     <div class="two">
-      <div class="fld"><label>Источник</label><input id="fSrc" list="srcs" placeholder="hh.ru"><datalist id="srcs"></datalist></div>
+      <div class="fld"><label>Источник</label>
+        <select id="fSrc" onchange="srcChange()"></select>
+        <input id="fSrcOther" style="display:none;margin-top:8px" placeholder="откуда пришёл">
+      </div>
       <div class="fld"><label>Ожидания по деньгам</label><input id="fPay" placeholder="от 120 000"></div>
     </div>
     <div class="fld"><label>Кто ведёт</label><input id="fOwner" placeholder="Любовь"></div>
@@ -290,7 +293,6 @@ function initUI(){
   roles = roles.filter(function(v,i){ return roles.indexOf(v)===i; }).sort();
   document.getElementById('fRole').innerHTML = '<option value="">Все должности</option>'+roles.map(function(r){return '<option>'+r+'</option>';}).join('');
   document.getElementById('roles').innerHTML = roles.map(function(r){return '<option>'+r+'</option>';}).join('');
-  document.getElementById('srcs').innerHTML  = SOURCES.map(function(r){return '<option>'+r+'</option>';}).join('');
   document.getElementById('fStatus').innerHTML = '<option value="">Все статусы</option>'+STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
   document.getElementById('fStat').innerHTML = STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
 }
@@ -363,7 +365,7 @@ function openNew(){
 }
 function fill(r){
   fFio.value=r.fio; fRoleI.value=r.role; fStat.value=r.status; fPhone.value=r.phone;
-  fTg.value=r.tg; fSrc.value=r.src; fPay.value=r.pay; fNote.value=r.note; fOwner.value=r.owner||WHO;
+  fTg.value=r.tg; fillSrc(r.src); fPay.value=r.pay; fNote.value=r.note; fOwner.value=r.owner||WHO;
   fHh.value=r.hh||'';
   lHh.href = r.hh || '#'; lHh.style.opacity = r.hh ? 1 : .35;
   var res = document.getElementById('fResume');
@@ -376,6 +378,32 @@ function fill(r){
     return '<div class="hi"><time>'+esc(x.when)+'</time><span>'+esc(x.what)+(x.who?' · '+esc(x.who):'')+'</span></div>';
   }).join('') || '<div class="hi"><span style="color:var(--ink-3)">пока пусто</span></div>';
 }
+function fillSrc(val){
+  val = String(val || '');
+  var list = SOURCES.slice();
+  if (val && list.indexOf(val) < 0) list.push(val);      // «Рекомендация Михаила Эргашева» не должна пропасть
+  document.getElementById('fSrc').innerHTML =
+    '<option value="">не указан</option>' +
+    list.map(function(x){ return '<option'+(x===val?' selected':'')+'>'+esc(x)+'</option>'; }).join('') +
+    '<option value="__other__">вписать своё…</option>';
+  var other = document.getElementById('fSrcOther');
+  other.style.display = 'none'; other.value = '';
+}
+
+function srcChange(){
+  var sel = document.getElementById('fSrc'), other = document.getElementById('fSrcOther');
+  if (sel.value === '__other__'){
+    other.style.display = ''; other.focus();
+  } else {
+    other.style.display = 'none'; other.value = '';
+  }
+}
+
+function srcValue(){
+  var sel = document.getElementById('fSrc'), other = document.getElementById('fSrcOther');
+  return sel.value === '__other__' ? other.value.trim() : sel.value;
+}
+
 function show(){ document.getElementById('panel').classList.add('on'); document.getElementById('shade').classList.add('on'); }
 function closePanel(){ document.getElementById('panel').classList.remove('on'); document.getElementById('shade').classList.remove('on'); }
 
@@ -424,7 +452,7 @@ function save(){
   btn.disabled = true; btn.textContent = 'Сохраняю…';
   var row = {
     id: cur.id, fio: fFio.value.trim(), role: fRoleI.value.trim(), status: fStat.value,
-    phone: fPhone.value.trim(), tg: fTg.value.trim(), src: fSrc.value.trim(), pay: fPay.value.trim(),
+    phone: fPhone.value.trim(), tg: fTg.value.trim(), src: srcValue(), pay: fPay.value.trim(),
     resume: document.getElementById('fResume').dataset.url || '',
     hh: fHh.value.trim(),
     note: fNote.value.trim(), owner: fOwner.value.trim() || WHO

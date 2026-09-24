@@ -189,7 +189,10 @@ tr:last-child td{border-bottom:none}
       <div class="fld"><label>Ожидания по деньгам</label><input id="fPay" placeholder="от 120 000"></div>
     </div>
     <div class="fld"><label>Кто ведёт</label><input id="fOwner" placeholder="Любовь"></div>
-    <div class="fld"><label>Резюме</label>
+    <div class="fld"><label>Анкета на hh.ru</label>
+      <div class="inline"><input id="fHh" placeholder="ссылка на резюме hh.ru"><a id="lHh" href="#" target="_blank">открыть</a></div>
+    </div>
+    <div class="fld"><label>Резюме файлом</label>
       <div class="file">
         <span class="nm" id="fResume">файл не приложен</span>
         <label>приложить<input type="file" accept="application/pdf,image/*" style="display:none" onchange="uploadFile(this)"></label>
@@ -318,7 +321,7 @@ function render(){
     return (tab==='all' || G(r.status)===tab) && (!fr || r.role===fr) && (!fs || r.status===fs);
   });
   if (q) rows = rows.filter(function(r){
-    return [r.fio,r.role,r.tg,r.note,r.src,r.owner].some(function(v){ return norm(v).indexOf(q)>=0; })
+    return [r.fio,r.role,r.tg,r.note,r.src,r.owner,r.hh].some(function(v){ return norm(v).indexOf(q)>=0; })
         || (qd.length>=3 && dig(r.phone).indexOf(qd)>=0);
   });
   rows.sort(function(a,b){ return d(b.changed)-d(a.changed); });
@@ -349,7 +352,7 @@ function open_(id){
   show();
 }
 function openNew(){
-  cur = {id:'',fio:'',role:'',status:(STATUSES[0]||{}).k||'Новый',phone:'',tg:'',src:'',pay:'',resume:'',note:'',owner:WHO};
+  cur = {id:'',fio:'',role:'',status:(STATUSES[0]||{}).k||'Новый',phone:'',tg:'',src:'',pay:'',resume:'',hh:'',note:'',owner:WHO};
   isNew = true;
   document.getElementById('pTitle').textContent = 'Новый кандидат';
   document.getElementById('pSub').textContent = 'Заполни хотя бы ФИО и телефон';
@@ -361,6 +364,8 @@ function openNew(){
 function fill(r){
   fFio.value=r.fio; fRoleI.value=r.role; fStat.value=r.status; fPhone.value=r.phone;
   fTg.value=r.tg; fSrc.value=r.src; fPay.value=r.pay; fNote.value=r.note; fOwner.value=r.owner||WHO;
+  fHh.value=r.hh||'';
+  lHh.href = r.hh || '#'; lHh.style.opacity = r.hh ? 1 : .35;
   var res = document.getElementById('fResume');
   res.innerHTML = r.resume ? '<a href="'+esc(r.resume)+'" target="_blank">открыть резюме</a>' : 'файл не приложен';
   res.dataset.url = r.resume || '';
@@ -421,6 +426,7 @@ function save(){
     id: cur.id, fio: fFio.value.trim(), role: fRoleI.value.trim(), status: fStat.value,
     phone: fPhone.value.trim(), tg: fTg.value.trim(), src: fSrc.value.trim(), pay: fPay.value.trim(),
     resume: document.getElementById('fResume').dataset.url || '',
+    hh: fHh.value.trim(),
     note: fNote.value.trim(), owner: fOwner.value.trim() || WHO
   };
   call({ action:'save', row: row, who: WHO }).then(function(r){

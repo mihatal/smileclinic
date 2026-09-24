@@ -296,6 +296,7 @@ function resetF(){ document.getElementById('q').value=''; document.getElementByI
 
 function norm(s){ return String(s||'').toLowerCase().replace(/[^a-zа-я0-9@]/gi,''); }
 function dig(s){ return String(s||'').replace(/\D/g,'').slice(-10); }
+function cut(s){ s = String(s||''); return s.length > 70 ? s.slice(0, 70) + '…' : s; }
 function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
 function render(){
@@ -324,12 +325,12 @@ function render(){
 
   document.getElementById('count').textContent = rows.length+' из '+DB.length;
   document.getElementById('list').innerHTML = rows.length ? '<table>'+
-    '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Последнее касание</th></tr>'+
+    '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Касание и комментарий</th></tr>'+
     rows.map(function(r){ return '<tr class="row" onclick="open_(\''+r.id+'\')">'+
       '<td><div class="fio">'+esc(r.fio)+'</div><div class="sub">'+esc(r.phone)+(r.tg?' · '+esc(r.tg):'')+'</div></td>'+
       '<td>'+(esc(r.role)||'—')+'</td>'+
       '<td><span class="pill '+C(r.status)+'"><span class="dot"></span>'+esc(r.status)+'</span></td>'+
-      '<td class="when">'+esc(r.changed)+'<i>'+esc(r.last)+'</i></td></tr>';
+      '<td class="when">'+esc(r.changed)+'<i>'+esc(cut(r.note))+'</i></td></tr>';
     }).join('')+'</table>'
     : '<div class="empty">Никого не нашлось. Поменяй фильтры или заведи нового кандидата.</div>';
 }

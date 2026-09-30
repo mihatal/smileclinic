@@ -76,6 +76,8 @@ tr:last-child td{border-bottom:none}
 .p-ok{background:var(--ok-soft);color:var(--ok)}
 .p-mute{background:var(--mute-soft);color:var(--mute)}
 .p-black{background:var(--black-soft);color:#fff}
+.p-red{background:#fdeae7;color:#d32f2f;box-shadow:inset 0 0 0 1px #f3b7ae}
+.p-red-dark{background:#d32f2f;color:#fff}
 .when{color:var(--ink-2);font-size:13px}
 .when i{display:block;font-style:normal;color:var(--ink-3);font-size:11px;margin-top:2px}
 .empty{padding:70px 20px;text-align:center;color:var(--ink-3);background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
@@ -277,7 +279,8 @@ var TABS = [
 ];
 var PILL = {'В работе':'p-work','Принятые':'p-ok','Банк резюме':'p-mute','Чёрный список':'p-black'};
 function G(st){ for (var i=0;i<STATUSES.length;i++) if (STATUSES[i].k===st) return STATUSES[i].g; return 'В работе'; }
-function C(st){ return PILL[G(st)] || 'p-mute'; }
+var PILL_STATUS = { 'Отказ': 'p-red', 'Чёрный список': 'p-red-dark' };
+function C(st){ return PILL_STATUS[st] || PILL[G(st)] || 'p-mute'; }
 
 function apply(r){
   DB = r.rows; HIST = r.hist || {}; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;

@@ -135,6 +135,21 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 .dup.on{display:block}
 .dup b{display:block;margin-bottom:4px}
 .dup button{background:none;border:none;color:var(--bronze);text-decoration:underline;font-size:13px;padding:0;font-weight:600}
+.ank{font-size:13px;color:var(--ink-2);margin-bottom:8px;line-height:1.5}
+.ank b{color:var(--ok)}
+.ank a{color:var(--bronze);font-weight:600;cursor:pointer;text-decoration:underline}
+#ankRole{flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.av{position:fixed;inset:0;background:rgba(20,20,22,.5);z-index:40;display:none;align-items:flex-start;justify-content:center;padding:30px 14px;overflow-y:auto}
+.av.on{display:flex}
+.av .box{background:var(--card);border-radius:14px;max-width:620px;width:100%;padding:24px 24px 18px}
+.av h2{margin:0 0 4px;font-size:19px;letter-spacing:-.02em}
+.av .sub{margin-bottom:16px}
+.av dl{margin:0;display:grid;grid-template-columns:170px 1fr;gap:8px 14px;font-size:13px}
+.av dt{color:var(--ink-3)}
+.av dd{margin:0;white-space:pre-wrap;word-break:break-word}
+.av h3{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:20px 0 10px}
+.av .docs button{background:var(--bronze-soft);border:1px solid var(--bronze-line);color:var(--bronze);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;margin:0 6px 6px 0}
+@media(max-width:560px){ .av dl{grid-template-columns:1fr} .av dt{margin-top:6px} }
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:600;z-index:50;transition:.25s;opacity:0}
 .toast.on{transform:translate(-50%,0);opacity:1}
 @media(max-width:720px){
@@ -220,6 +235,14 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
         <label>приложить<input type="file" accept="application/pdf,image/*" style="display:none" onchange="uploadFile(this)"></label>
       </div>
     </div>
+    <div class="fld" id="ankBox"><label>Анкета сотрудника</label>
+      <div class="ank" id="ankState"></div>
+      <div class="inline"><select id="ankRole">
+        <option value="vrach">Врач</option><option value="tehnik">Зубной техник</option>
+        <option value="assist">Ассистент врача-стоматолога</option><option value="ms">Медсестра ЦСО</option>
+        <option value="admin">Администратор</option></select><a href="#" id="ankBtn" onclick="ankLink();return false">дать ссылку</a></div>
+      <div class="inline" id="ankOut" style="display:none;margin-top:8px"><input id="ankUrl" readonly onclick="this.select()"><a href="#" onclick="ankCopy();return false">скопировать</a></div>
+    </div>
     <div class="fld"><label>Комментарий</label><textarea id="fNote" placeholder="Что важно помнить об этом человеке"></textarea></div>
     <div class="hist" id="histBox"><h3>История</h3><div id="hist"></div></div>
   </div>
@@ -231,6 +254,7 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
   </div>
 </aside>
 
+<div class="av" id="av" onclick="if(event.target===this)this.classList.remove('on')"><div class="box" id="avBox"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -285,7 +309,7 @@ function enter(){
 }
 
 /* ===== данные ===== */
-var DB = [], HIST = {}, STATUSES = [], ROLES = [], SOURCES = [], tab = 'all', cur = null, isNew = false;
+var DB = [], HIST = {}, ANK = {}, STATUSES = [], ROLES = [], SOURCES = [], tab = 'all', cur = null, isNew = false;
 
 var TABS = [
  {k:'all',  t:'Все'},
@@ -300,7 +324,7 @@ var PILL_STATUS = { 'Отказ': 'p-red', 'Чёрный список': 'p-red-d
 function C(st){ return PILL_STATUS[st] || PILL[G(st)] || 'p-mute'; }
 
 function apply(r){
-  DB = r.rows; HIST = r.hist || {}; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;
+  DB = r.rows; HIST = r.hist || {}; ANK = r.anketas || {}; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;
   initUI(); render();
 }
 function reload(){ return call({action:'list'}).then(function(r){ if(!r.error) apply(r); }); }
@@ -357,7 +381,7 @@ function render(){
   document.getElementById('list').innerHTML = rows.length ? '<table>'+
     '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Касание и комментарий</th></tr>'+
     rows.map(function(r){ return '<tr class="row'+(PILL_STATUS[r.status]?' r-red':'')+'" onclick="open_(\''+esc(r.id)+'\')">'+
-      '<td><div class="fio">'+esc(r.fio)+'</div><div class="sub">'+esc(r.phone)+(r.tg?' · '+esc(r.tg):'')+'</div></td>'+
+      '<td><div class="fio">'+esc(r.fio)+'</div><div class="sub">'+esc(r.phone)+(r.tg?' · '+esc(r.tg):'')+(ANK[String(r.id)]?' · <span style="color:var(--ok);font-weight:600">анкета есть</span>':'')+'</div></td>'+
       '<td>'+(esc(r.role)||'—')+'</td>'+
       '<td><span class="pill '+C(r.status)+'"><span class="dot"></span>'+esc(r.status)+'</span></td>'+
       '<td class="when">'+esc(r.changed)+'<i>'+esc(cut(r.note))+'</i></td></tr>';
@@ -409,6 +433,7 @@ function open_(id){
   fill(cur); document.getElementById('dup').classList.remove('on');
   document.getElementById('histBox').style.display = 'block';
   document.getElementById('delBtn').style.display = '';
+  fillAnk(cur);
   show();
 }
 function openNew(){
@@ -419,6 +444,7 @@ function openNew(){
   fill(cur); document.getElementById('dup').classList.remove('on');
   document.getElementById('histBox').style.display = 'none';
   document.getElementById('delBtn').style.display = 'none';   /* нечего удалять, человека ещё нет */
+  document.getElementById('ankBox').style.display = 'none';   /* анкету даём только сохранённому кандидату */
   show(); setTimeout(function(){ document.getElementById('fFio').focus(); }, 260);
 }
 function fill(r){
@@ -488,6 +514,71 @@ function uploadFile(input){
   input.value = '';
 }
 
+/* ===== анкета сотрудника =====
+   Ссылка подписана базой: в ней номер кандидата, поэтому ответы сами прилетают в его карточку. */
+var ANK_FILES = {passport:'Паспорт', snils:'СНИЛС', trud:'Трудовая книжка', privivki:'Прививочный сертификат', medkn:'Медкнижка',
+  diplom:'Диплом', perepodg:'Переподготовка и сертификат', akkr:'Аккредитация', voen:'Военный билет'};
+function ankGuess(role){
+  role = String(role||'').toLowerCase();
+  if (/ассист/.test(role)) return 'assist';
+  if (/техник/.test(role)) return 'tehnik';
+  if (/медсест|цсо/.test(role)) return 'ms';
+  if (/админ/.test(role)) return 'admin';
+  return 'vrach';
+}
+function fillAnk(r){
+  document.getElementById('ankBox').style.display = '';
+  document.getElementById('ankRole').value = ankGuess(r.role);
+  document.getElementById('ankOut').style.display = 'none';
+  var a = ANK[String(r.id)];
+  document.getElementById('ankState').innerHTML = a
+    ? '<b>Анкета получена</b> ' + esc(a.when) + ' (' + esc(a.role) + ') · <a onclick="ankShow()">открыть</a>'
+    : 'Пока не заполнена. Выбери должность и отправь человеку ссылку.';
+}
+function ankLink(){
+  if (!cur || !cur.id) return;
+  var role = document.getElementById('ankRole').value, btn = document.getElementById('ankBtn');
+  btn.textContent = 'минуту…';
+  call({ action:'anketa_link', id: cur.id, role: role, who: WHO }).then(function(r){
+    btn.textContent = 'дать ссылку';
+    if (r.error){ toast(r.error); return; }
+    var base = location.origin + location.pathname.replace(/[^\/]*$/, '');
+    document.getElementById('ankUrl').value = base + 'anketa/?r=' + r.role + '&c=' + r.c + '&k=' + r.k;
+    document.getElementById('ankOut').style.display = 'flex';
+    ankCopy();
+  }).catch(function(){ btn.textContent = 'дать ссылку'; toast('База не ответила'); });
+}
+function ankCopy(){
+  var el = document.getElementById('ankUrl');
+  (navigator.clipboard ? navigator.clipboard.writeText(el.value) : Promise.reject()).then(function(){ toast('Ссылка скопирована, отправь её человеку'); })
+    .catch(function(){ el.select(); document.execCommand('copy'); toast('Ссылка скопирована'); });
+}
+var AV = null;
+function ankShow(){
+  var box = document.getElementById('avBox');
+  box.innerHTML = '<div class="sub">Загружаю анкету…</div>';
+  document.getElementById('av').classList.add('on');
+  call({ action:'anketa_get', id: cur.id }).then(function(r){
+    if (r.error){ box.innerHTML = '<div class="sub">' + esc(r.error) + '</div>'; return; }
+    AV = r;
+    var rows = r.cols.filter(function(c){ return r.a[c[0]]; }).map(function(c){ return '<dt>' + esc(c[1]) + '</dt><dd>' + esc(r.a[c[0]]) + '</dd>'; }).join('');
+    var docs = Object.keys(r.files).map(function(k){
+      return '<div style="margin-bottom:6px"><span style="font-size:13px;color:var(--ink-2);display:inline-block;min-width:170px">' + esc(ANK_FILES[k] || k) + '</span>' +
+        r.files[k].map(function(n, i){ return '<button onclick="ankDoc(\'' + k + '\',' + i + ')">файл ' + (i + 1) + '</button>'; }).join('') + '</div>';
+    }).join('');
+    box.innerHTML = '<h2>' + esc(r.a.fio || cur.fio) + '</h2><div class="sub">' + esc(r.role) + ' · заполнена ' + esc(r.when) + '</div>' +
+      '<dl>' + rows + '</dl><h3>Сканы</h3><div class="docs">' + (docs || '<div class="sub">не приложены</div>') + '</div>' +
+      '<div style="text-align:right;margin-top:14px"><button class="btn ghost" onclick="document.getElementById(\'av\').classList.remove(\'on\')">Закрыть</button></div>';
+  }).catch(function(){ box.innerHTML = '<div class="sub">База не ответила</div>'; });
+}
+function ankDoc(k, i){
+  var w = window.open('', '_blank');   /* окно открываем сразу, иначе браузер посчитает это всплывающей рекламой */
+  call({ action:'anketa_doc', path: AV.folder + '/' + AV.files[k][i] }).then(function(r){
+    if (r.error || !r.href){ if (w) w.close(); toast(r.error || 'Файл не открылся'); return; }
+    if (w) w.location = r.href; else location.href = r.href;
+  }).catch(function(){ if (w) w.close(); toast('База не ответила'); });
+}
+
 /* ===== дубли ===== */
 document.addEventListener('input', function(e){
   if (!isNew || (e.target.id!=='fPhone' && e.target.id!=='fFio')) return;
@@ -547,7 +638,7 @@ function del(){
   });
 }
 
-document.addEventListener('keydown', function(e){ if (e.key==='Escape') closePanel(); });
+document.addEventListener('keydown', function(e){ if (e.key==='Escape'){ var v = document.getElementById('av'); if (v.classList.contains('on')) v.classList.remove('on'); else closePanel(); } });
 
 /* старт */
 hintApi();

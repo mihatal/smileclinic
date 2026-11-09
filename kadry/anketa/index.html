@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="yandex" content="noindex, nofollow">
+<title>Анкета сотрудника SmileClinic</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📝</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+:root{
+  --ink:#1c1c1e; --ink-2:#55555c; --ink-3:#8a8a92;
+  --line:#e4e2dd; --bg:#f7f6f3; --card:#fff;
+  --bronze:#8a6a43; --bronze-soft:#f0e7dc; --bronze-line:#d8c6ae;
+  --ok:#3f6b57; --ok-soft:#e7efea; --err:#c4302b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.45}
+input,select,textarea,button{font-family:inherit;font-size:15px;color:var(--ink)}
+.wrap{max-width:640px;margin:0 auto;padding:28px 16px 80px}
+.brand{font-weight:700;letter-spacing:-.02em;font-size:15px;color:var(--ink-3)}
+.brand span{color:var(--bronze)}
+h1{font-size:24px;letter-spacing:-.02em;margin:10px 0 8px;line-height:1.2}
+.lead{color:var(--ink-2);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px;margin-bottom:16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:0 0 16px}
+.q{margin-bottom:18px}
+.q:last-child{margin-bottom:0}
+.q > label,.q > .lbl{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.q .opt{font-weight:400;color:var(--ink-3);font-size:13px}
+.q .help{font-size:13px;color:var(--ink-3);margin:-2px 0 8px}
+.q input[type=text],.q input[type=tel],.q input[type=email],.q input[type=date],.q textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.q textarea{min-height:76px;resize:vertical}
+.q input:focus,.q textarea:focus{outline:none;border-color:var(--bronze)}
+.ch{display:flex;flex-direction:column;gap:8px}
+.ch label{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-weight:500}
+.ch label:has(input:checked){border-color:var(--bronze);background:var(--bronze-soft)}
+.ch input{accent-color:var(--bronze);width:18px;height:18px;margin:0}
+.q.bad input[type=text],.q.bad input[type=tel],.q.bad input[type=email],.q.bad input[type=date],.q.bad textarea,.q.bad .ch label,.q.bad .drop{border-color:var(--err)}
+.q .e{display:none;color:var(--err);font-size:13px;font-weight:600;margin-top:6px}
+.q.bad .e{display:block}
+.drop{border:1px dashed var(--bronze-line);background:#fdfbf8;border-radius:9px;padding:12px 14px}
+.drop .add{display:inline-block;color:var(--bronze);font-weight:600;cursor:pointer;font-size:14px}
+.drop .add input{display:none}
+.fl{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px solid #f1efe9}
+.fl:last-of-type{border-bottom:none;margin-bottom:6px}
+.fl .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl .s{color:var(--ink-3);white-space:nowrap}
+.fl .s.ok{color:var(--ok);font-weight:600}
+.fl .s.no{color:var(--err);font-weight:600}
+.fl button{background:none;border:none;color:var(--ink-3);font-size:18px;line-height:1;padding:0 4px;cursor:pointer}
+.send{width:100%;border:none;background:var(--ink);color:#fff;padding:16px;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer}
+.send:disabled{opacity:.5;cursor:default}
+.foot{font-size:12px;color:var(--ink-3);margin-top:12px;text-align:center}
+.msg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:30px 22px;text-align:center}
+.msg h1{margin-top:0}
+.hide{display:none}
+.top-err{background:#fdecea;border:1px solid #f3c2bf;color:var(--err);border-radius:10px;padding:12px 14px;font-size:14px;font-weight:600;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Smile<span>Clinic</span></div>
+
+  <div id="bad" class="msg hide" style="margin-top:20px">
+    <h1>Ссылка неполная</h1>
+    <p class="lead" style="margin:0">Попросите отдел кадров прислать ссылку на анкету ещё раз.</p>
+  </div>
+
+  <div id="done" class="msg hide" style="margin-top:20px">
+    <h1>Спасибо, анкета отправлена</h1>
+    <p class="lead" style="margin:0">Мы подготовим вашу личную карточку сотрудника. Если чего-то не хватит, отдел кадров напишет вам.</p>
+  </div>
+
+  <form id="form" class="hide" novalidate onsubmit="send(event)">
+    <h1 id="title">Анкета сотрудника</h1>
+    <p class="lead">Это простая анкета, чтобы мы могли подготовить вашу личную карточку как сотрудника нашей организации :) Ответы сохраняются на этом устройстве, можно прерваться и вернуться по той же ссылке.</p>
+    <div id="cards"></div>
+    <div id="topErr" class="top-err hide"></div>
+    <button class="send" id="sendBtn" type="submit">Отправить анкету</button>
+    <div class="foot">Данные видит только отдел кадров клиники.</div>
+  </form>
+</div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbxRULVn_2GsL7Q0ozF0IZXG633j40XjHA70Kfh3zzPnMWb5smwtQ0hze9XxiyGTlo4CtQ/exec';
+
+var Q = new URLSearchParams(location.search);
+var ROLE = Q.get('r') || '', CID = Q.get('c') || '', KEY = Q.get('k') || '';
+var ROLES = { vrach:'Врач', tehnik:'Зубной техник', assist:'Ассистент врача-стоматолога', ms:'Медсестра ЦСО', admin:'Администратор' };
+
+/* какие документы по образованию нужны каждой должности (из старых анкет в Buildin) */
+var DOCS = {
+  vrach:  [['diplom','Диплом об образовании',1], ['perepodg','Диплом о переподготовке и сертификат',1], ['akkr','Аккредитация',1]],
+  tehnik: [['diplom','Диплом об образовании',1], ['perepodg','Диплом о переподготовке и сертификат',1], ['akkr','Аккредитация',1]],
+  assist: [['diplom','Диплом об образовании',1], ['akkr','Аккредитация или сертификат',1]],
+  ms:     [['diplom','Диплом об образовании',1], ['akkr','Аккредитация или сертификат',1]],
+  admin:  [['diplom','Диплом об образовании, если есть',0]]
+};
+var MILITARY_FILE = ROLE !== 'admin';
+var SOFT = ROLE === 'vrach';   /* у врача телеграм и госслужба были необязательными */
+
+function sections(){
+  return [
+    { t:'О вас', q:[
+      {k:'fio', l:'ФИО', type:'text', req:1, ac:'name'},
+      {k:'birth', l:'Дата рождения', type:'date', req:1},
+      {k:'birthplace', l:'Место рождения', type:'text', req:1, help:'Как в паспорте'},
+      {k:'citizenship', l:'Гражданство', type:'radio', req:1, opts:['РФ','Другое']},
+      {k:'marital', l:'Семейное положение', type:'radio', req:1, opts:['Женат / замужем','Не женат / не замужем']},
+      {k:'family', l:'Ближайшие родственники', type:'area', req:1, help:'Муж или жена, кто ещё близкий. Имя и 1–2 номера телефона'}
+    ]},
+    { t:'Контакты и адреса', q:[
+      {k:'phone', l:'Номер телефона', type:'tel', req:1, ac:'tel'},
+      {k:'tg', l:'Телеграм', type:'text', req:!SOFT, help:'Ник, например @ivanova'},
+      {k:'email', l:'Электронная почта', type:'email', req:1, ac:'email'},
+      {k:'addr_live', l:'Адрес фактического проживания', type:'text', req:1},
+      {k:'addr_reg', l:'Адрес регистрации', type:'text', req:1, help:'Как в паспорте'}
+    ]},
+    { t:'Образование и служба', q:[
+      {k:'education', l:'Образование', type:'area', req:1, help:'Учебное заведение, специальность по диплому, квалификация'},
+      {k:'military', l:'Отношение к воинской обязанности', type:'radio', req:1, opts:['Есть военный билет','Нет военного билета']},
+      {k:'gov', l:'Были ли вы последние два года на госслужбе или являетесь госслужащим сейчас?', type:'radio', req:!SOFT, opts:['Да','Нет']}
+    ]},
+    { t:'Документы', note:'Фото с телефона подойдут, главное, чтобы текст читался. Можно приложить несколько файлов в один пункт.', q:[
+      {k:'passport', l:'Паспорт', type:'file', req:1, help:'Разворот с фото и страница с регистрацией'},
+      {k:'inn', l:'ИНН', type:'text', req:1, inputmode:'numeric', help:'12 цифр'},
+      {k:'snils', l:'СНИЛС', type:'file', req:1},
+      {k:'trud', l:'Выгрузка из электронной трудовой книжки', type:'file', req:1, help:'Скачивается на Госуслугах: Документы → Трудовая книжка'},
+      {k:'privivki', l:'Прививочный сертификат', type:'file', req:1, help:'Все страницы'},
+      {k:'medkn', l:'Медицинская книжка', type:'file', req:1, help:'Все страницы'}
+    ].concat(DOCS[ROLE].map(function(d){ return {k:d[0], l:d[1], type:'file', req:d[2]}; }))
+     .concat(MILITARY_FILE ? [{k:'voen', l:'Военный билет', type:'file', req:1, help:'Все заполненные страницы', show:function(a){ return a.military === 'Есть военный билет'; }}] : [])
+    },
+    { t:'Зарплата', q:[
+      {k:'vtb', l:'Зарплату платим на карту ВТБ. Есть ли у вас карта ВТБ?', type:'radio', req:1, opts:['Есть карта ВТБ','Нужно открыть новую']}
+    ]}
+  ];
+}
+
+/* ===== черновик на устройстве ===== */
+var DKEY = 'sc_anketa_' + ROLE + '_' + CID;
+var D = {};
+try { D = JSON.parse(localStorage.getItem(DKEY) || '{}'); } catch(e){ D = {}; }
+D.a = D.a || {}; D.files = D.files || {};
+if (!D.sid){ D.sid = (Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-z0-9]/g,'').slice(0, 20); }
+function keep(){ try { localStorage.setItem(DKEY, JSON.stringify(D)); } catch(e){} }
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function call(p){
+  p.role = ROLE; p.c = CID; p.k = KEY; p.sid = D.sid;
+  return fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(p) })
+    .then(function(r){ return r.json(); });
+}
+
+/* ===== отрисовка ===== */
+var ALL = [];
+function build(){
+  document.getElementById('title').textContent = 'Анкета сотрудника · ' + ROLES[ROLE];
+  var html = '';
+  sections().forEach(function(s){
+    html += '<div class="card"><h2>' + s.t + '</h2>' + (s.note ? '<p class="help" style="margin:-6px 0 16px;color:var(--ink-3);font-size:13px">' + s.note + '</p>' : '');
+    s.q.forEach(function(q){
+      ALL.push(q);
+      var opt = q.req ? '' : ' <span class="opt">необязательно</span>';
+      var v = D.a[q.k] || '';
+      html += '<div class="q" id="q_' + q.k + '">';
+      if (q.type === 'radio'){
+        html += '<div class="lbl">' + q.l + opt + '</div>' + (q.help ? '<div class="help">' + q.help + '</div>' : '') + '<div class="ch">' +
+          q.opts.map(function(o){ return '<label><input type="radio" name="' + q.k + '" value="' + esc(o) + '"' + (v === o ? ' checked' : '') + '>' + esc(o) + '</label>'; }).join('') + '</div>';
+      } else if (q.type === 'file'){
+        html += '<div class="lbl">' + q.l + opt + '</div>' + (q.help ? '<div class="help">' + q.help + '</div>' : '') +
+          '<div class="drop"><div id="fl_' + q.k + '"></div><label class="add">+ Приложить файл<input type="file" multiple accept="image/*,application/pdf" data-k="' + q.k + '"></label></div>';
+      } else {
+        html += '<label for="i_' + q.k + '">' + q.l + opt + '</label>' + (q.help ? '<div class="help">' + q.help + '</div>' : '');
+        if (q.type === 'area') html += '<textarea id="i_' + q.k + '" name="' + q.k + '">' + esc(v) + '</textarea>';
+        else html += '<input id="i_' + q.k + '" name="' + q.k + '" type="' + q.type + '" value="' + esc(v) + '"' + (q.ac ? ' autocomplete="' + q.ac + '"' : '') + (q.inputmode ? ' inputmode="' + q.inputmode + '"' : '') + '>';
+      }
+      html += '<div class="e">' + (q.type === 'file' ? 'Приложите файл' : 'Заполните это поле') + '</div></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('cards').innerHTML = html;
+  ALL.forEach(function(q){ if (q.type === 'file') drawFiles(q.k); });
+  toggle();
+}
+
+function toggle(){
+  ALL.forEach(function(q){ if (q.show) document.getElementById('q_' + q.k).classList.toggle('hide', !q.show(D.a)); });
+}
+
+document.addEventListener('input', onEdit);
+document.addEventListener('change', onEdit);
+function onEdit(e){
+  var t = e.target;
+  if (t.type === 'file'){ if (e.type === 'change') addFiles(t); return; }
+  if (!t.name) return;
+  D.a[t.name] = t.value; keep(); toggle();
+  var box = document.getElementById('q_' + t.name); if (box) box.classList.remove('bad');
+}
+
+/* ===== файлы: грузим сразу по одному, фото ужимаем, чтобы шло быстро с мобильного ===== */
+var UP = {};   /* что сейчас в пути: key -> [{name, st}] */
+function drawFiles(k){
+  var done = (D.files[k] || []).map(function(f, i){ return '<div class="fl"><span class="n">' + esc(f.orig) + '</span><span class="s ok">загружен</span><button type="button" onclick="dropFile(\'' + k + '\',' + i + ')" title="убрать">×</button></div>'; });
+  var go = (UP[k] || []).map(function(f){ return '<div class="fl"><span class="n">' + esc(f.name) + '</span><span class="s ' + (f.st === 'не загрузился' ? 'no' : '') + '">' + f.st + '</span></div>'; });
+  document.getElementById('fl_' + k).innerHTML = done.concat(go).join('');
+}
+function dropFile(k, i){ D.files[k].splice(i, 1); keep(); drawFiles(k); }
+
+function shrink(file){
+  return new Promise(function(ok){
+    if (!/^image\/(jpeg|png|webp|heic|heif)/i.test(file.type) || file.size < 900 * 1024) return ok(file);
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      var m = 2400, w = img.naturalWidth, h = img.naturalHeight, s = Math.min(1, m / Math.max(w, h));
+      var cv = document.createElement('canvas'); cv.width = Math.round(w * s); cv.height = Math.round(h * s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      cv.toBlob(function(b){ ok(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', {type:'image/jpeg'}) : file); }, 'image/jpeg', 0.85);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); ok(file); };   /* формат не открылся в браузере, шлём как есть */
+    img.src = url;
+  });
+}
+
+function b64(file){
+  return new Promise(function(ok, no){
+    var r = new FileReader();
+    r.onload = function(){ ok(String(r.result).split(',')[1]); };
+    r.onerror = no; r.readAsDataURL(file);
+  });
+}
+
+function addFiles(input){
+  var k = input.dataset.k, list = Array.prototype.slice.call(input.files);
+  input.value = '';
+  document.getElementById('q_' + k).classList.remove('bad');
+  list.forEach(function(f){
+    var item = { name: f.name, st: 'загружаю…' };
+    (UP[k] = UP[k] || []).push(item); drawFiles(k);
+    if (f.size > 25 * 1024 * 1024){ item.st = 'больше 25 МБ'; drawFiles(k); return; }
+    shrink(f).then(function(g){
+      if (g.size > 20 * 1024 * 1024) throw new Error('big');
+      return b64(g).then(function(data){ return call({ action:'anketa_file', field:k, name:g.name, mime:g.type, data:data }); });
+    }).then(function(r){
+      if (!r || !r.ok) throw new Error(r && r.error);
+      UP[k].splice(UP[k].indexOf(item), 1);
+      (D.files[k] = D.files[k] || []).push({ name: r.name, orig: f.name }); keep();
+      drawFiles(k);
+    }).catch(function(){
+      item.st = 'не загрузился'; drawFiles(k);
+      setTimeout(function(){ var i = UP[k].indexOf(item); if (i >= 0) UP[k].splice(i, 1); drawFiles(k); }, 6000);
+    });
+  });
+}
+function busy(){ return Object.keys(UP).some(function(k){ return UP[k].some(function(f){ return f.st === 'загружаю…'; }); }); }
+
+/* ===== отправка ===== */
+function check(){
+  var first = null;
+  ALL.forEach(function(q){
+    var box = document.getElementById('q_' + q.k);
+    if (q.show && !q.show(D.a)){ box.classList.remove('bad'); return; }
+    var bad = false;
+    if (q.type === 'file') bad = q.req && !(D.files[q.k] || []).length;
+    else {
+      var v = String(D.a[q.k] || '').trim();
+      bad = q.req && !v;
+      if (!bad && v && q.k === 'email') bad = !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+      if (!bad && v && q.k === 'inn') bad = !/^\d{10,12}$/.test(v.replace(/\s/g, ''));
+      if (!bad && v && q.k === 'phone') bad = v.replace(/\D/g, '').length < 10;
+    }
+    box.classList.toggle('bad', bad);
+    if (bad){
+      box.querySelector('.e').textContent = q.type === 'file' ? 'Приложите файл' : (String(D.a[q.k] || '').trim() ? 'Проверьте, тут ошибка' : 'Заполните это поле');
+      if (!first) first = box;
+    }
+  });
+  return first;
+}
+
+function send(e){
+  e.preventDefault();
+  var te = document.getElementById('topErr');
+  te.classList.add('hide');
+  if (busy()){ te.textContent = 'Подождите, файлы ещё загружаются.'; te.classList.remove('hide'); return; }
+  var first = check();
+  if (first){ first.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  var btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Отправляю…';
+  var a = {}; ALL.forEach(function(q){ if (q.type !== 'file' && (!q.show || q.show(D.a))) a[q.k] = String(D.a[q.k] || '').trim(); });
+  var files = {}; Object.keys(D.files).forEach(function(k){
+    var q = ALL.filter(function(x){ return x.k === k; })[0];
+    if (q && (!q.show || q.show(D.a)) && D.files[k].length) files[k] = D.files[k].map(function(f){ return f.name; });
+  });
+  call({ action:'anketa_send', a:a, files:files }).then(function(r){
+    if (!r || !r.ok) throw new Error(r && r.error || '');
+    try { localStorage.removeItem(DKEY); } catch(e){}
+    document.getElementById('form').classList.add('hide');
+    document.getElementById('done').classList.remove('hide');
+    window.scrollTo(0, 0);
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = 'Отправить анкету';
+    te.textContent = 'Не отправилось' + (err.message ? ': ' + err.message : '') + '. Проверьте интернет и нажмите ещё раз, ответы не пропадут.';
+    te.classList.remove('hide');
+  });
+}
+
+/* старт */
+if (ROLES[ROLE] && /^\d{1,6}$/.test(CID) && /^[0-9a-f]{16}$/.test(KEY)){
+  keep(); build(); document.getElementById('form').classList.remove('hide');
+} else {
+  document.getElementById('bad').classList.remove('hide');
+}
+</script>
+</body>
+</html>

@@ -517,7 +517,8 @@ function uploadFile(input){
 /* ===== анкета сотрудника =====
    Ссылка подписана базой: в ней номер кандидата, поэтому ответы сами прилетают в его карточку. */
 var ANK_FILES = {passport:'Паспорт', snils:'СНИЛС', trud:'Трудовая книжка', privivki:'Прививочный сертификат', medkn:'Медкнижка',
-  diplom:'Диплом', perepodg:'Переподготовка и сертификат', akkr:'Аккредитация', voen:'Военный билет'};
+  diplom:'Диплом', perepodg:'Переподготовка и сертификат', akkr:'Аккредитация', voen:'Военный билет',
+  deti:'Свидетельство о рождении', sudimost:'Справка о судимости', dohod:'Справка о доходах'};
 function ankGuess(role){
   role = String(role||'').toLowerCase();
   if (/ассист/.test(role)) return 'assist';
@@ -573,9 +574,13 @@ function ankShow(){
 }
 function ankDoc(k, i){
   var w = window.open('', '_blank');   /* окно открываем сразу, иначе браузер посчитает это всплывающей рекламой */
+  if (w) w.document.write('<p style="font:15px sans-serif;padding:20px">Открываю скан…</p>');
   call({ action:'anketa_doc', path: AV.folder + '/' + AV.files[k][i] }).then(function(r){
-    if (r.error || !r.href){ if (w) w.close(); toast(r.error || 'Файл не открылся'); return; }
-    if (w) w.location = r.href; else location.href = r.href;
+    if (r.error || !r.data){ if (w) w.close(); toast(r.error || 'Файл не открылся'); return; }
+    var bin = atob(r.data), arr = new Uint8Array(bin.length);
+    for (var j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+    var url = URL.createObjectURL(new Blob([arr], { type: r.mime }));
+    if (w) w.location.href = url; else location.href = url;
   }).catch(function(){ if (w) w.close(); toast('База не ответила'); });
 }
 

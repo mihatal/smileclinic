@@ -109,7 +109,9 @@ function sections(){
       {k:'birthplace', l:'Место рождения', type:'text', req:1, help:'Как в паспорте'},
       {k:'citizenship', l:'Гражданство', type:'radio', req:1, opts:['РФ','Другое']},
       {k:'marital', l:'Семейное положение', type:'radio', req:1, opts:['Женат / замужем','Не женат / не замужем']},
-      {k:'family', l:'Ближайшие родственники', type:'area', req:1, help:'Муж или жена, кто ещё близкий. Имя и 1–2 номера телефона'}
+      {k:'family', l:'Ближайшие родственники', type:'area', req:1, help:'Муж или жена, кто ещё близкий. Имя и 1–2 номера телефона'},
+      {k:'children', l:'Есть ли у вас дети?', type:'radio', req:1, opts:['Да','Нет']},
+      {k:'deti', l:'Свидетельство о рождении ребёнка', type:'file', req:1, help:'Если детей несколько, приложите на каждого', show:function(a){ return a.children === 'Да'; }}
     ]},
     { t:'Контакты и адреса', q:[
       {k:'phone', l:'Номер телефона', type:'tel', req:1, ac:'tel'},
@@ -129,7 +131,10 @@ function sections(){
       {k:'snils', l:'СНИЛС', type:'file', req:1},
       {k:'trud', l:'Выгрузка из электронной трудовой книжки', type:'file', req:1, help:'Скачивается на Госуслугах: Документы → Трудовая книжка'},
       {k:'privivki', l:'Прививочный сертификат', type:'file', req:1, help:'Все страницы'},
-      {k:'medkn', l:'Медицинская книжка', type:'file', req:1, help:'Все страницы'}
+      {k:'medbook', l:'Медицинская книжка', type:'radio', req:1, opts:['Есть медкнижка','Нет медкнижки']},
+      {k:'medkn', l:'Скан медкнижки', type:'file', req:1, help:'Все страницы', show:function(a){ return a.medbook === 'Есть медкнижка'; }},
+      {k:'sudimost', l:'Справка о наличии (отсутствии) судимости', type:'file', req:1, help:'Заказывается на Госуслугах, приходит в электронном виде'},
+      {k:'dohod', l:'Справка о доходах с прошлого места работы', type:'file', req:0, help:'Если в этом году вы уже работали в другом месте'}
     ].concat(DOCS[ROLE].map(function(d){ return {k:d[0], l:d[1], type:'file', req:d[2]}; }))
      .concat(MILITARY_FILE ? [{k:'voen', l:'Военный билет', type:'file', req:1, help:'Все заполненные страницы', show:function(a){ return a.military === 'Есть военный билет'; }}] : [])
     },

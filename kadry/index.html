@@ -81,6 +81,20 @@ tr:last-child td{border-bottom:none}
 tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 .when{color:var(--ink-2);font-size:13px}
 .when i{display:block;font-style:normal;color:var(--ink-3);font-size:11px;margin-top:2px}
+/* воронка */
+.funnel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.funnel h3{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+.funnel .hint{font-size:12px;color:var(--ink-3);margin-bottom:12px;line-height:1.5}
+.fn{display:grid;grid-template-columns:120px 1fr 120px;gap:12px;align-items:center;padding:5px 0;font-size:13px}
+.fn .bar{height:22px;background:var(--line-2);border-radius:6px;overflow:hidden}
+.fn .bar i{display:block;height:100%;background:var(--bronze);border-radius:6px;min-width:2px}
+.fn .bar i.ok{background:var(--ok)}
+.fn .num{text-align:right;color:var(--ink-2);white-space:nowrap}
+.fn .num b{color:var(--ink);font-weight:700}
+.fn .num span{color:var(--ink-3);font-size:12px;margin-left:6px}
+.funnel .tot{margin-top:10px;font-size:13px;color:var(--ink-2)}
+.funnel .tot b{color:var(--ok)}
+@media(max-width:720px){ .fn{grid-template-columns:92px 1fr 92px} }
 .empty{padding:70px 20px;text-align:center;color:var(--ink-3);background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .note{padding:12px 16px;margin-bottom:14px;background:var(--bronze-soft);border:1px solid var(--bronze-line);border-radius:var(--r);color:var(--bronze);font-size:13px;line-height:1.5}
 
@@ -162,6 +176,7 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 
 <div class="wrap">
   <div class="note" id="tabNote"></div>
+  <div class="funnel" id="funnel" style="display:none"></div>
   <div id="list"></div>
 </div>
 
@@ -336,6 +351,7 @@ function render(){
   if (tab==='all') rows.sort(function(a,b){ return (Number(b.id)||0)-(Number(a.id)||0); });
   else rows.sort(function(a,b){ return d(b.changed)-d(a.changed); });
 
+  renderFunnel(fr);
   document.getElementById('count').textContent = rows.length+' из '+DB.length;
   document.getElementById('list').innerHTML = rows.length ? '<table>'+
     '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Касание и комментарий</th></tr>'+
@@ -347,6 +363,39 @@ function render(){
     }).join('')+'</table>'
     : '<div class="empty">Никого не нашлось. Поменяй фильтры или заведи нового кандидата.</div>';
 }
+/* ===== воронка =====
+   Для каждого кандидата берём самый дальний этап, до которого он дошёл: текущий статус
+   плюс все статусы из истории. Кто прошёл собес и получил отказ, всё равно засчитан на «Собес». */
+var STAGES = ['Новый','Звонок','Собес','Тестовый день','Оффер','Работает'];
+function reached(r){
+  var best = STAGES.indexOf(r.status);
+  if (r.status === 'Уволен') best = Math.max(best, STAGES.length - 1);   // раз уволен, значит работал
+  (HIST[String(r.id)] || []).forEach(function(h){
+    var m = String(h.what).match(/^статус: (.*) → (.*)$/);
+    if (m) [m[1], m[2]].forEach(function(s){ best = Math.max(best, STAGES.indexOf(s.trim())); });
+  });
+  return Math.max(best, 0);   // попал в базу = минимум «Новый»
+}
+function renderFunnel(fr){
+  var box = document.getElementById('funnel');
+  if (tab !== 'all'){ box.style.display = 'none'; return; }
+  var pool = DB.filter(function(r){ return !fr || r.role === fr; });
+  var cnt = STAGES.map(function(){ return 0; });
+  pool.forEach(function(r){ var b = reached(r); for (var i = 0; i <= b; i++) cnt[i]++; });
+  var top = cnt[0] || 1;
+  var pct = function(a, b){ return b ? Math.round(a / b * 100) + '%' : '—'; };
+  box.innerHTML = '<h3>Воронка найма' + (fr ? ' · ' + esc(fr) : '') + '</h3>' +
+    '<div class="hint">Сколько кандидатов дошли до каждого этапа. Справа: доля от предыдущего этапа. Фильтр по должности пересчитывает воронку. ' +
+    'У кандидатов из старой таблицы промежуточные этапы не записаны, поэтому середина воронки пока занижена и будет точнее с каждым новым кандидатом.</div>' +
+    STAGES.map(function(s, i){
+      return '<div class="fn"><div>' + s + '</div>' +
+        '<div class="bar"><i class="' + (i >= 4 ? 'ok' : '') + '" style="width:' + (cnt[i] / top * 100) + '%"></i></div>' +
+        '<div class="num"><b>' + cnt[i] + '</b><span>' + (i ? pct(cnt[i], cnt[i-1]) : '100%') + '</span></div></div>';
+    }).join('') +
+    '<div class="tot">Из всех кандидатов вышли на работу: <b>' + pct(cnt[5], cnt[0]) + '</b> (' + cnt[5] + ' из ' + cnt[0] + ')</div>';
+  box.style.display = 'block';
+}
+
 function d(s){ var p = String(s||'01.01.2000').split('.'); return new Date(p[2],p[1]-1,p[0]); }
 
 /* ===== карточка ===== */

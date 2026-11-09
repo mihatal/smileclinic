@@ -76,8 +76,9 @@ tr:last-child td{border-bottom:none}
 .p-ok{background:var(--ok-soft);color:var(--ok)}
 .p-mute{background:var(--mute-soft);color:var(--mute)}
 .p-black{background:var(--black-soft);color:#fff}
-.p-red{background:#fdeae7;color:#d32f2f;box-shadow:inset 0 0 0 1px #f3b7ae}
-.p-red-dark{background:#d32f2f;color:#fff}
+.p-red{background:#ff1f1f;color:#fff}
+.p-red-dark{background:#ff1f1f;color:#fff;box-shadow:0 0 0 2px #b80000}
+tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 .when{color:var(--ink-2);font-size:13px}
 .when i{display:block;font-style:normal;color:var(--ink-3);font-size:11px;margin-top:2px}
 .empty{padding:70px 20px;text-align:center;color:var(--ink-3);background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
@@ -294,10 +295,11 @@ function initUI(){
   }).join('');
   var roles = ROLES.concat(DB.map(function(r){return r.role;})).filter(Boolean);
   roles = roles.filter(function(v,i){ return roles.indexOf(v)===i; }).sort();
-  document.getElementById('fRole').innerHTML = '<option value="">Все должности</option>'+roles.map(function(r){return '<option>'+r+'</option>';}).join('');
-  document.getElementById('roles').innerHTML = roles.map(function(r){return '<option>'+r+'</option>';}).join('');
-  document.getElementById('fStatus').innerHTML = '<option value="">Все статусы</option>'+STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
-  document.getElementById('fStat').innerHTML = STATUSES.map(function(s){return '<option>'+s.k+'</option>';}).join('');
+  /* всё, что вписали люди, экранируем: иначе в название должности можно спрятать код */
+  document.getElementById('fRole').innerHTML = '<option value="">Все должности</option>'+roles.map(function(r){return '<option>'+esc(r)+'</option>';}).join('');
+  document.getElementById('roles').innerHTML = roles.map(function(r){return '<option>'+esc(r)+'</option>';}).join('');
+  document.getElementById('fStatus').innerHTML = '<option value="">Все статусы</option>'+STATUSES.map(function(s){return '<option>'+esc(s.k)+'</option>';}).join('');
+  document.getElementById('fStat').innerHTML = STATUSES.map(function(s){return '<option>'+esc(s.k)+'</option>';}).join('');
 }
 function setTab(k){ tab = k; render(); }
 function resetF(){ document.getElementById('q').value=''; document.getElementById('fRole').value=''; document.getElementById('fStatus').value=''; render(); }
@@ -305,6 +307,7 @@ function resetF(){ document.getElementById('q').value=''; document.getElementByI
 function norm(s){ return String(s||'').toLowerCase().replace(/[^a-zа-я0-9@]/gi,''); }
 function dig(s){ return String(s||'').replace(/\D/g,'').slice(-10); }
 function cut(s){ s = String(s||''); return s.length > 70 ? s.slice(0, 70) + '…' : s; }
+function web(u){ u = String(u||'').trim(); return /^https?:\/\//i.test(u) ? u : ''; }   /* ссылки только http(s) */
 function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
 function render(){
@@ -329,12 +332,14 @@ function render(){
     return [r.fio,r.role,r.tg,r.note,r.src,r.owner,r.hh].some(function(v){ return norm(v).indexOf(q)>=0; })
         || (qd.length>=3 && dig(r.phone).indexOf(qd)>=0);
   });
-  rows.sort(function(a,b){ return d(b.changed)-d(a.changed); });
+  /* «Все» — последние заведённые сверху (номер растёт при каждом новом), остальные вкладки — по последнему касанию */
+  if (tab==='all') rows.sort(function(a,b){ return (Number(b.id)||0)-(Number(a.id)||0); });
+  else rows.sort(function(a,b){ return d(b.changed)-d(a.changed); });
 
   document.getElementById('count').textContent = rows.length+' из '+DB.length;
   document.getElementById('list').innerHTML = rows.length ? '<table>'+
     '<tr><th>Кандидат</th><th>Должность</th><th>Статус</th><th>Касание и комментарий</th></tr>'+
-    rows.map(function(r){ return '<tr class="row" onclick="open_(\''+r.id+'\')">'+
+    rows.map(function(r){ return '<tr class="row'+(PILL_STATUS[r.status]?' r-red':'')+'" onclick="open_(\''+esc(r.id)+'\')">'+
       '<td><div class="fio">'+esc(r.fio)+'</div><div class="sub">'+esc(r.phone)+(r.tg?' · '+esc(r.tg):'')+'</div></td>'+
       '<td>'+(esc(r.role)||'—')+'</td>'+
       '<td><span class="pill '+C(r.status)+'"><span class="dot"></span>'+esc(r.status)+'</span></td>'+
@@ -370,9 +375,9 @@ function fill(r){
   fFio.value=r.fio; fRoleI.value=r.role; fStat.value=r.status; fPhone.value=r.phone;
   fTg.value=r.tg; fillSrc(r.src); fPay.value=r.pay; fNote.value=r.note; fOwner.value=r.owner||WHO;
   fHh.value=r.hh||'';
-  lHh.href = r.hh || '#'; lHh.style.opacity = r.hh ? 1 : .35;
+  lHh.href = web(r.hh) || '#'; lHh.style.opacity = web(r.hh) ? 1 : .35;
   var res = document.getElementById('fResume');
-  res.innerHTML = r.resume ? '<a href="'+esc(r.resume)+'" target="_blank">открыть резюме</a>' : 'файл не приложен';
+  res.innerHTML = web(r.resume) ? '<a href="'+esc(web(r.resume))+'" target="_blank" rel="noopener">открыть резюме</a>' : 'файл не приложен';
   res.dataset.url = r.resume || '';
   lPhone.href = 'tel:'+String(r.phone||'').replace(/\s/g,'');
   lTg.href = 'https://t.me/'+String(r.tg||'').replace('@','');

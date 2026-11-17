@@ -95,6 +95,11 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 .fn .num span{color:var(--ink-3);font-size:12px;margin-left:6px}
 .funnel .tot{margin-top:10px;font-size:13px;color:var(--ink-2)}
 .funnel .tot b{color:var(--ok)}
+.funnel h4{margin:18px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);border-top:1px solid var(--line);padding-top:14px}
+.fn .bar i.red{background:#ff1f1f}
+.fn .bar i.grey{background:var(--mute)}
+.fn .bar i.dark{background:var(--black-soft)}
+.fn .where{grid-column:2 / 4;font-size:12px;color:var(--ink-3);margin-top:-4px}
 @media(max-width:720px){ .fn{grid-template-columns:92px 1fr 92px} }
 .empty{padding:70px 20px;text-align:center;color:var(--ink-3);background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
 .note{padding:12px 16px;margin-bottom:14px;background:var(--bronze-soft);border:1px solid var(--bronze-line);border-radius:var(--r);color:var(--bronze);font-size:13px;line-height:1.5}
@@ -392,6 +397,7 @@ function render(){
    Для каждого кандидата берём самый дальний этап, до которого он дошёл: текущий статус
    плюс все статусы из истории. Кто прошёл собес и получил отказ, всё равно засчитан на «Собес». */
 var STAGES = ['Новый','Звонок','Собес','Тестовый день','Оффер','Работает'];
+var OUTS = [{k:'Игнор', c:'grey'}, {k:'Отказ', c:'red'}, {k:'Уволен', c:'dark'}];
 function reached(r){
   var best = STAGES.indexOf(r.status);
   if (r.status === 'Уволен') best = Math.max(best, STAGES.length - 1);   // раз уволен, значит работал
@@ -417,7 +423,19 @@ function renderFunnel(fr){
         '<div class="bar"><i class="' + (i >= 4 ? 'ok' : '') + '" style="width:' + (cnt[i] / top * 100) + '%"></i></div>' +
         '<div class="num"><b>' + cnt[i] + '</b><span>' + (i ? pct(cnt[i], cnt[i-1]) : '100%') + '</span></div></div>';
     }).join('') +
-    '<div class="tot">Из всех кандидатов вышли на работу: <b>' + pct(cnt[5], cnt[0]) + '</b> (' + cnt[5] + ' из ' + cnt[0] + ')</div>';
+    '<div class="tot">Из всех кандидатов вышли на работу: <b>' + pct(cnt[5], cnt[0]) + '</b> (' + cnt[5] + ' из ' + cnt[0] + ')</div>' +
+    /* кто выбыл: по текущему статусу, и на каком этапе это случилось */
+    '<h4>Выбыли</h4>' + OUTS.map(function(o){
+      var who = pool.filter(function(r){ return r.status === o.k; });
+      var at = {};
+      who.forEach(function(r){ var s = STAGES[reached(r)]; at[s] = (at[s] || 0) + 1; });
+      var where = o.k === 'Уволен' ? '' : STAGES.filter(function(s){ return at[s]; }).map(function(s){ return s + ' ' + at[s]; }).join(' · ');
+      return '<div class="fn"><div>' + o.k + '</div>' +
+        '<div class="bar"><i class="' + o.c + '" style="width:' + (who.length / top * 100) + '%"></i></div>' +
+        '<div class="num"><b>' + who.length + '</b><span>' + pct(who.length, cnt[0]) + '</span></div>' +
+        (where ? '<div></div><div class="where">дошли до этапа: ' + where + '</div>' : '') + '</div>';
+    }).join('') +
+    '<div class="hint" style="margin:8px 0 0">Справа доля от всех кандидатов. «Уволен» считается и в «Работает»: человек сначала вышел на работу.</div>';
   box.style.display = 'block';
 }
 

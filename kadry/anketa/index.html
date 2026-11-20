@@ -56,6 +56,10 @@ h1{font-size:24px;letter-spacing:-.02em;margin:10px 0 8px;line-height:1.2}
 .foot{font-size:12px;color:var(--ink-3);margin-top:12px;text-align:center}
 .msg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:30px 22px;text-align:center}
 .msg h1{margin-top:0}
+.consent{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px;cursor:pointer;font-size:14px;line-height:1.5}
+.consent input{accent-color:var(--bronze);width:20px;height:20px;margin:1px 0 0;flex:none}
+.consent.bad{border-color:var(--err)}
+.consent small{display:block;color:var(--ink-3);font-size:12px;margin-top:6px}
 .hide{display:none}
 .top-err{background:#fdecea;border:1px solid #f3c2bf;color:var(--err);border-radius:10px;padding:12px 14px;font-size:14px;font-weight:600;margin-bottom:14px}
 </style>
@@ -78,6 +82,9 @@ h1{font-size:24px;letter-spacing:-.02em;margin:10px 0 8px;line-height:1.2}
     <h1 id="title">Анкета сотрудника</h1>
     <p class="lead">Это простая анкета, чтобы мы могли подготовить вашу личную карточку как сотрудника нашей организации :) Ответы сохраняются на этом устройстве, можно прерваться и вернуться по той же ссылке.</p>
     <div id="cards"></div>
+    <label class="consent" id="consentBox"><input type="checkbox" id="consent">
+      <span>Я даю согласие клинике SmileClinic на обработку моих персональных данных и копий документов из этой анкеты для оформления на работу и ведения кадрового учёта.
+      <small>Данные хранятся у клиники и не передаются посторонним. Согласие можно отозвать, написав в отдел кадров.</small></span></label>
     <div id="topErr" class="top-err hide"></div>
     <button class="send" id="sendBtn" type="submit">Отправить анкету</button>
     <div class="foot">Данные видит только отдел кадров клиники.</div>
@@ -202,6 +209,7 @@ document.addEventListener('change', onEdit);
 function onEdit(e){
   var t = e.target;
   if (t.type === 'file'){ if (e.type === 'change') addFiles(t); return; }
+  if (t.id === 'consent'){ document.getElementById('consentBox').classList.remove('bad'); return; }
   if (!t.name) return;
   D.a[t.name] = t.value; keep(); toggle();
   var box = document.getElementById('q_' + t.name); if (box) box.classList.remove('bad');
@@ -297,6 +305,9 @@ function send(e){
   if (busy()){ te.textContent = 'Подождите, файлы ещё загружаются.'; te.classList.remove('hide'); return; }
   var first = check();
   if (first){ first.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+  var cb = document.getElementById('consent'), cbox = document.getElementById('consentBox');
+  cbox.classList.toggle('bad', !cb.checked);
+  if (!cb.checked){ te.textContent = 'Отметьте согласие на обработку персональных данных, без него мы не можем принять анкету.'; te.classList.remove('hide'); return; }
   var btn = document.getElementById('sendBtn');
   btn.disabled = true; btn.textContent = 'Отправляю…';
   var a = {}; ALL.forEach(function(q){ if (q.type !== 'file' && (!q.show || q.show(D.a))) a[q.k] = String(D.a[q.k] || '').trim(); });
@@ -304,6 +315,7 @@ function send(e){
     var q = ALL.filter(function(x){ return x.k === k; })[0];
     if (q && (!q.show || q.show(D.a)) && D.files[k].length) files[k] = D.files[k].map(function(f){ return f.name; });
   });
+  a.consent = 'да';
   call({ action:'anketa_send', a:a, files:files }).then(function(r){
     if (!r || !r.ok) throw new Error(r && r.error || '');
     try { localStorage.removeItem(DKEY); } catch(e){}

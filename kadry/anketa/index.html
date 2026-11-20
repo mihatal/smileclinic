@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="yandex" content="noindex, nofollow">
@@ -278,6 +279,7 @@ function check(){
       if (!bad && v && q.k === 'email') bad = !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
       if (!bad && v && q.k === 'inn') bad = !/^\d{10,12}$/.test(v.replace(/\s/g, ''));
       if (!bad && v && q.k === 'phone') bad = v.replace(/\D/g, '').length < 10;
+      if (!bad && v && q.k === 'birth'){ var y = Number(v.slice(0, 4)), now = new Date().getFullYear(); bad = !(y >= now - 90 && y <= now - 14); }
     }
     box.classList.toggle('bad', bad);
     if (bad){

@@ -5,6 +5,7 @@
 <meta name="googlebot" content="noindex, nofollow">
 <meta name="yandex" content="noindex, nofollow">
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Кадры SmileClinic</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂</text></svg>">
@@ -583,16 +584,18 @@ function ankShow(){
     if (r.error){ box.innerHTML = '<div class="sub">' + esc(r.error) + '</div>'; return; }
     AV = r;
     var rows = r.cols.filter(function(c){ return r.a[c[0]]; }).map(function(c){ return '<dt>' + esc(c[1]) + '</dt><dd>' + esc(r.a[c[0]]) + '</dd>'; }).join('');
-    var docs = Object.keys(r.files).map(function(k){
+    AV.keys = Object.keys(r.files).filter(function(k){ return /^[a-z_]{2,20}$/.test(k); });
+    var docs = AV.keys.map(function(k, ki){
       return '<div style="margin-bottom:6px"><span style="font-size:13px;color:var(--ink-2);display:inline-block;min-width:170px">' + esc(ANK_FILES[k] || k) + '</span>' +
-        r.files[k].map(function(n, i){ return '<button onclick="ankDoc(\'' + k + '\',' + i + ')">файл ' + (i + 1) + '</button>'; }).join('') + '</div>';
+        r.files[k].map(function(n, i){ return '<button onclick="ankDoc(' + ki + ',' + i + ')">файл ' + (i + 1) + '</button>'; }).join('') + '</div>';
     }).join('');
     box.innerHTML = '<h2>' + esc(r.a.fio || cur.fio) + '</h2><div class="sub">' + esc(r.role) + ' · заполнена ' + esc(r.when) + '</div>' +
       '<dl>' + rows + '</dl><h3>Сканы</h3><div class="docs">' + (docs || '<div class="sub">не приложены</div>') + '</div>' +
       '<div style="text-align:right;margin-top:14px"><button class="btn ghost" onclick="document.getElementById(\'av\').classList.remove(\'on\')">Закрыть</button></div>';
   }).catch(function(){ box.innerHTML = '<div class="sub">База не ответила</div>'; });
 }
-function ankDoc(k, i){
+function ankDoc(ki, i){
+  var k = AV.keys[ki];
   var w = window.open('', '_blank');   /* окно открываем сразу, иначе браузер посчитает это всплывающей рекламой */
   if (w) w.document.write('<p style="font:15px sans-serif;padding:20px">Открываю скан…</p>');
   call({ action:'anketa_doc', path: AV.folder + '/' + AV.files[k][i] }).then(function(r){

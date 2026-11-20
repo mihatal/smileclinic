@@ -196,6 +196,7 @@ tr.row.r-red td:first-child{box-shadow:inset 4px 0 0 #ff1f1f}
 </div>
 
 <div class="wrap">
+  <div class="note" id="warn" style="display:none;background:#fdecea;border-color:#f3c2bf;color:#c4302b;font-weight:600"></div>
   <div class="note" id="tabNote"></div>
   <div class="funnel" id="funnel" style="display:none"></div>
   <div id="list"></div>
@@ -329,7 +330,8 @@ var PILL_STATUS = { 'Отказ': 'p-red', 'Чёрный список': 'p-red-d
 function C(st){ return PILL_STATUS[st] || PILL[G(st)] || 'p-mute'; }
 
 function apply(r){
-  DB = r.rows; HIST = r.hist || {}; ANK = r.anketas || {}; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;
+  DB = r.rows; HIST = r.hist || {}; ANK = r.anketas || {};
+  var wb = document.getElementById('warn'); wb.textContent = r.warn || ''; wb.style.display = r.warn ? 'block' : 'none'; STATUSES = r.statuses; ROLES = r.roles; SOURCES = r.sources;
   initUI(); render();
 }
 function reload(){ return call({action:'list'}).then(function(r){ if(!r.error) apply(r); }); }

@@ -251,12 +251,13 @@ function addFiles(input){
       if (g.size > 20 * 1024 * 1024) throw new Error('big');
       return b64(g).then(function(data){ return call({ action:'anketa_file', field:k, name:g.name, mime:g.type, data:data }); });
     }).then(function(r){
-      if (!r || !r.ok) throw new Error(r && r.error);
+      if (!r || !r.ok) throw new Error(r && r.error || '');
       UP[k].splice(UP[k].indexOf(item), 1);
       (D.files[k] = D.files[k] || []).push({ name: r.name, orig: f.name }); keep();
       drawFiles(k);
-    }).catch(function(){
+    }).catch(function(err){
       item.st = 'не загрузился'; drawFiles(k);
+      if (err && err.message && err.message !== 'big'){ var te = document.getElementById('topErr'); te.textContent = err.message; te.classList.remove('hide'); }
       setTimeout(function(){ var i = UP[k].indexOf(item); if (i >= 0) UP[k].splice(i, 1); drawFiles(k); }, 6000);
     });
   });
